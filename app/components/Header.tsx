@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import Logo from "./Logo";
+import { buildWhatsAppUrl } from "../lib/whatsapp";
 
 const navLinks = [
   { label: "Home", href: "/" },
@@ -170,7 +171,7 @@ export default function Header() {
             <div className="mt-8 pt-6 border-t border-border-light">
               <p className="text-sm text-text-muted mb-2">Need help?</p>
               <a
-                href="https://wa.me/2348012345678"
+                href={buildWhatsAppUrl("Hello Edjay Realty")}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center gap-2 text-primary font-medium"

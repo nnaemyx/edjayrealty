@@ -1,11 +1,12 @@
 import Image from "next/image";
 import Link from "next/link";
-import { getEstates, getStats, getWhyChooseUs, getTestimonials, getGalleryImages } from "./lib/db";
+import { getEstates, getStats, getWhyChooseUs, getTestimonials, getGalleryImages, getCeoProfile } from "./lib/db";
 import EstateCard from "./components/EstateCard";
 import StatsCounter from "./components/StatsCounter";
 import TestimonialCarousel from "./components/TestimonialCarousel";
 import GalleryGrid from "./components/GalleryGrid";
 import ContactForm from "./components/ContactForm";
+import { buildWhatsAppUrl } from "./lib/whatsapp";
 
 export default async function Home() {
   const estates = await getEstates();
@@ -13,6 +14,7 @@ export default async function Home() {
   const whyChooseUs = await getWhyChooseUs();
   const testimonials = await getTestimonials();
   const galleryImages = await getGalleryImages();
+  const ceo = await getCeoProfile();
 
   // We'll show the top 3 selling-fast or available estates on the homepage
   const featuredEstates = estates.slice(0, 3);
@@ -330,8 +332,8 @@ export default async function Home() {
             {/* Founder Image */}
             <div className="relative aspect-[3/4] w-full max-w-md mx-auto rounded-2xl overflow-hidden shadow-2xl shadow-gray-200 border border-border/40">
               <Image
-                src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=600&q=80"
-                alt="Edjay Okonkwo - Founder & CEO"
+                src={ceo.image}
+                alt={`${ceo.name} - ${ceo.role}`}
                 fill
                 sizes="(max-width: 1024px) 100vw, 50vw"
                 className="object-cover"
@@ -339,7 +341,7 @@ export default async function Home() {
               <div className="absolute inset-0 bg-gradient-to-t from-dark/60 via-transparent to-transparent" />
               <div className="absolute bottom-0 left-0 right-0 p-6">
                 <span className="inline-block px-3 py-1 bg-primary/90 text-white text-xs font-bold uppercase tracking-wider rounded-full mb-2">
-                  Founder & CEO
+                  {ceo.role}
                 </span>
               </div>
             </div>
@@ -347,39 +349,42 @@ export default async function Home() {
             {/* Founder Content */}
             <div>
               <span className="block text-xs font-bold uppercase tracking-widest text-primary mb-3">
-                Meet The Founder
+                {ceo.sectionLabel}
               </span>
               <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold font-[family-name:var(--font-heading)] text-dark mb-4 leading-tight">
-                Edjay Okonkwo
+                {ceo.name}
               </h2>
-              <p className="text-lg text-primary font-semibold mb-6">
-                We bank the future
-              </p>
-              <p className="text-text-muted text-base leading-relaxed mb-6">
-                With over 10 years of experience in Nigerian real estate, Edjay founded the company with a vision to make property investment accessible and trustworthy. His passion for building communities and his commitment to integrity have been the driving forces behind every project.
-              </p>
-              <p className="text-text-muted text-base leading-relaxed mb-8">
-                Under his leadership, Edjay Realty has grown from a small property consultancy into a leading real estate development firm in Southeast Nigeria, delivering over 850 verified land allocations and managing 4 premium estates across Anambra and Abuja.
-              </p>
+              {ceo.tagline && (
+                <p className="text-lg text-primary font-semibold mb-6">
+                  {ceo.tagline}
+                </p>
+              )}
+              {ceo.bioParagraph1 && (
+                <p className="text-text-muted text-base leading-relaxed mb-6">
+                  {ceo.bioParagraph1}
+                </p>
+              )}
+              {ceo.bioParagraph2 && (
+                <p className="text-text-muted text-base leading-relaxed mb-8">
+                  {ceo.bioParagraph2}
+                </p>
+              )}
 
               {/* Achievements */}
-              <div className="grid grid-cols-2 gap-4">
-                {[
-                  { label: "Years in Real Estate", value: "10+" },
-                  { label: "Estates Developed", value: "4+" },
-                  { label: "Properties Delivered", value: "850+" },
-                  { label: "Happy Investors", value: "1,200+" },
-                ].map((stat, i) => (
-                  <div key={i} className="bg-white rounded-xl p-4 border border-border/50 text-center">
-                    <span className="block text-2xl font-extrabold text-primary font-[family-name:var(--font-heading)]">
-                      {stat.value}
-                    </span>
-                    <span className="text-xs text-text-muted font-semibold uppercase tracking-wider">
-                      {stat.label}
-                    </span>
-                  </div>
-                ))}
-              </div>
+              {ceo.achievements.length > 0 && (
+                <div className="grid grid-cols-2 gap-4">
+                  {ceo.achievements.map((stat, i) => (
+                    <div key={i} className="bg-white rounded-xl p-4 border border-border/50 text-center">
+                      <span className="block text-2xl font-extrabold text-primary font-[family-name:var(--font-heading)]">
+                        {stat.value}
+                      </span>
+                      <span className="text-xs text-text-muted font-semibold uppercase tracking-wider">
+                        {stat.label}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -541,7 +546,7 @@ export default async function Home() {
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <a
-              href="https://wa.me/2348012345678?text=Hello%20Edjay%20Realty%2C%20I%27m%20ready%20to%20invest%20in%20an%20estate."
+              href={buildWhatsAppUrl("Hello Edjay Realty, I'm ready to invest in an estate.")}
               target="_blank"
               rel="noopener noreferrer"
               className="bg-primary hover:bg-primary-light text-white font-bold px-8 py-4 rounded-xl transition-all flex items-center justify-center gap-2 hover:shadow-lg hover:shadow-primary/20"

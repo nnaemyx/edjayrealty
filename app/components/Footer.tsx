@@ -1,5 +1,6 @@
 import Link from "next/link";
 import Logo from "./Logo";
+import { buildWhatsAppUrl } from "../lib/whatsapp";
 
 const quickLinks = [
   { label: "Home", href: "/" },
@@ -118,7 +119,7 @@ export default function Footer() {
                 <span className="text-white/70 text-sm">info@edjayrealty.com</span>
               </div>
               <a
-                href="https://wa.me/2348012345678"
+                href={buildWhatsAppUrl("Hello Edjay Realty")}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-2 mt-2 bg-primary/20 hover:bg-primary/30 text-primary px-4 py-2 rounded-lg text-sm font-medium transition-all"
