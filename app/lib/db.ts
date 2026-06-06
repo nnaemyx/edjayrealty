@@ -1,4 +1,4 @@
-import clientPromise from "./mongodb";
+import clientPromise, { getDatabaseName } from "./mongodb";
 import {
   estates as mockEstates,
   testimonials as mockTestimonials,
@@ -24,6 +24,46 @@ export interface Plot {
   status: string;
 }
 
+export interface BuyInquiryDetails {
+  propertyDetail: {
+    estate: string;
+    propertyTemplate: string;
+    units: number;
+    paymentPlan: string;
+    paymentPackage: string;
+    landPurpose: string;
+    propertyLocation: string;
+    plotSize: string;
+    referralCode?: string;
+  };
+  applicantDetail: {
+    title: string;
+    firstName: string;
+    lastName: string;
+    otherName?: string;
+    gender: string;
+    maritalStatus: string;
+    birthDate: string;
+    nationality: string;
+    motherMaidenName: string;
+    occupation: string;
+    phone: string;
+    email: string;
+    meansOfIdentification: string;
+    meansOfIdentificationFile?: string;
+    address?: string;
+  };
+  nokDetail: {
+    title: string;
+    firstName: string;
+    lastName: string;
+    otherName?: string;
+    phone: string;
+    email: string;
+    relationship: string;
+  };
+}
+
 export interface Inquiry {
   id: string;
   name: string;
@@ -33,6 +73,8 @@ export interface Inquiry {
   estate: string;
   date: string;
   status: string;
+  type?: "contact" | "buy-now";
+  buyDetails?: BuyInquiryDetails;
 }
 
 const mockPlots: Plot[] = [
@@ -101,8 +143,16 @@ async function getDb() {
   if (!clientPromise) {
     return null;
   }
-  const client = await clientPromise;
-  return client.db();
+  try {
+    const client = await clientPromise;
+    return client.db(getDatabaseName());
+  } catch (error) {
+    console.error(
+      "MongoDB connection failed. Check Atlas Network Access (IP whitelist) and your MONGODB_URI.",
+      error instanceof Error ? error.message : error
+    );
+    return null;
+  }
 }
 
 // Default empty stats fallback
@@ -319,6 +369,32 @@ export async function getGalleryImages(): Promise<GalleryImage[]> {
   } catch (error) {
     return [];
   }
+}
+
+export async function saveGalleryImage(image: GalleryImage): Promise<void> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not connected");
+  await db.collection("gallery").replaceOne(
+    { _id: image.id } as any,
+    { ...image, _id: image.id } as any,
+    { upsert: true }
+  );
+}
+
+export async function deleteGalleryImage(id: string): Promise<void> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not connected");
+  await db.collection("gallery").deleteOne({ _id: id } as any);
+}
+
+export async function saveStats(stats: typeof defaultStats): Promise<void> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not connected");
+  await db.collection("stats").replaceOne(
+    { _id: "company-stats" } as any,
+    { ...stats, _id: "company-stats" } as any,
+    { upsert: true }
+  );
 }
 
 export async function getTeamMembers(): Promise<TeamMember[]> {

@@ -69,7 +69,7 @@ export default function Header() {
           {/* Desktop CTA */}
           <div className="hidden lg:flex items-center gap-3">
             <Link
-              href="/estates"
+              href="/buy"
               id="header-cta"
               className="bg-primary hover:bg-primary-dark text-white px-6 py-2.5 rounded-lg text-sm font-semibold transition-all duration-200 hover:shadow-lg hover:shadow-primary/25"
             >
@@ -152,7 +152,7 @@ export default function Header() {
 
             <div className="mt-8 pt-6 border-t border-border-light">
               <Link
-                href="/estates"
+                href="/buy"
                 onClick={() => setIsMobileMenuOpen(false)}
                 className="block w-full bg-primary hover:bg-primary-dark text-white text-center px-6 py-3 rounded-lg font-semibold transition-all"
               >

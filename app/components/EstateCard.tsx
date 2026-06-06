@@ -1,15 +1,16 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { Estate } from "../lib/data";
+import EstateCardCarousel from "./EstateCardCarousel";
 
 interface EstateCardProps {
   estate: Estate;
 }
 
 export default function EstateCard({ estate }: EstateCardProps) {
-  const { id, name, location, state, shortDescription, priceRange, image, plotSizes, status } = estate;
+  const { id, name, location, state, shortDescription, priceRange, image, images, plotSizes, status } = estate;
+  const cardImages = images?.length ? images : image ? [image] : [];
 
   // Badge styles based on status
   const getStatusBadge = () => {
@@ -44,22 +45,11 @@ export default function EstateCard({ estate }: EstateCardProps) {
 
   const badge = getStatusBadge();
 
-  // Create WhatsApp booking link
-  const whatsappUrl = `https://wa.me/2348012345678?text=Hello%20Edjay%20Realty%2C%20I%27m%20interested%20in%20purchasing%20plots%20at%20${encodeURIComponent(
-    name
-  )}%20in%20${encodeURIComponent(location)}.`;
-
   return (
     <div className="group bg-white rounded-2xl overflow-hidden border border-border/60 hover:border-primary/20 hover:shadow-xl hover:shadow-primary/5 transition-all duration-300 flex flex-col h-full">
-      {/* Image Area */}
-      <div className="relative aspect-[4/3] w-full overflow-hidden bg-gray-100">
-        <Image
-          src={image}
-          alt={name}
-          fill
-          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-          className="object-cover transition-transform duration-500 group-hover:scale-105"
-        />
+      {/* Image Carousel */}
+      <div className="relative">
+        <EstateCardCarousel images={cardImages} alt={name} />
         {/* Status Badge */}
         <span className={`absolute top-4 left-4 z-10 px-3.5 py-1.5 rounded-full text-xs font-semibold uppercase tracking-wider shadow-md ${badge.classes}`}>
           {badge.text}
@@ -127,14 +117,12 @@ export default function EstateCard({ estate }: EstateCardProps) {
               Sold Out
             </button>
           ) : (
-            <a
-              href={whatsappUrl}
-              target="_blank"
-              rel="noopener noreferrer"
+            <Link
+              href={`/buy?estate=${id}`}
               className="flex items-center justify-center gap-1.5 bg-primary hover:bg-primary-dark text-white py-2.5 rounded-lg text-sm font-semibold transition-all hover:shadow-lg hover:shadow-primary/10"
             >
               Buy Now
-            </a>
+            </Link>
           )}
         </div>
       </div>

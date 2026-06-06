@@ -2,6 +2,12 @@
 
 import { useState, useEffect, useCallback } from "react";
 
+interface BuyDetails {
+  propertyDetail?: Record<string, unknown>;
+  applicantDetail?: Record<string, unknown>;
+  nokDetail?: Record<string, unknown>;
+}
+
 interface Lead {
   id: string;
   name: string;
@@ -11,6 +17,8 @@ interface Lead {
   estate: string;
   date: string;
   status: string;
+  type?: "contact" | "buy-now";
+  buyDetails?: BuyDetails;
 }
 
 export default function ManageInquiriesPage() {
@@ -18,6 +26,7 @@ export default function ManageInquiriesPage() {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedStatus, setSelectedStatus] = useState("All");
+  const [selectedType, setSelectedType] = useState("All");
   const [savingId, setSavingId] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
@@ -101,10 +110,13 @@ export default function ManageInquiriesPage() {
       lead.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
       lead.phone.includes(searchQuery);
     const matchesStatus = selectedStatus === "All" || lead.status === selectedStatus;
-    return matchesSearch && matchesStatus;
+    const leadType = lead.type || "contact";
+    const matchesType = selectedType === "All" || leadType === selectedType;
+    return matchesSearch && matchesStatus && matchesType;
   });
 
   const newCount = leads.filter((l) => l.status === "New").length;
+  const buyNowCount = leads.filter((l) => l.type === "buy-now").length;
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -119,6 +131,11 @@ export default function ManageInquiriesPage() {
             {newCount > 0 && (
               <span className="ml-2 bg-gold/20 text-gold px-2 py-0.5 rounded text-[10px] font-bold uppercase">
                 {newCount} new {newCount === 1 ? "lead" : "leads"}
+              </span>
+            )}
+            {buyNowCount > 0 && (
+              <span className="ml-2 bg-primary/10 text-primary px-2 py-0.5 rounded text-[10px] font-bold uppercase">
+                {buyNowCount} buy now
               </span>
             )}
           </p>
@@ -143,19 +160,34 @@ export default function ManageInquiriesPage() {
           onChange={(e) => setSearchQuery(e.target.value)}
           className="w-full sm:max-w-xs px-3 py-2 rounded-lg border border-border text-xs focus:border-primary outline-none"
         />
-        <div className="w-full sm:w-auto">
-          <label htmlFor="admin-status-filter" className="sr-only">Filter by Status</label>
-          <select
-            id="admin-status-filter"
-            value={selectedStatus}
-            onChange={(e) => setSelectedStatus(e.target.value)}
-            className="w-full sm:w-44 px-3 py-2 rounded-lg border border-border text-xs bg-white"
-          >
-            <option value="All">All Statuses</option>
-            <option value="New">New</option>
-            <option value="Contacted">Contacted</option>
-            <option value="Closed">Closed</option>
-          </select>
+        <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+          <div>
+            <label htmlFor="admin-type-filter" className="sr-only">Filter by Type</label>
+            <select
+              id="admin-type-filter"
+              value={selectedType}
+              onChange={(e) => setSelectedType(e.target.value)}
+              className="w-full sm:w-40 px-3 py-2 rounded-lg border border-border text-xs bg-white"
+            >
+              <option value="All">All Types</option>
+              <option value="buy-now">Buy Now</option>
+              <option value="contact">Contact Form</option>
+            </select>
+          </div>
+          <div>
+            <label htmlFor="admin-status-filter" className="sr-only">Filter by Status</label>
+            <select
+              id="admin-status-filter"
+              value={selectedStatus}
+              onChange={(e) => setSelectedStatus(e.target.value)}
+              className="w-full sm:w-44 px-3 py-2 rounded-lg border border-border text-xs bg-white"
+            >
+              <option value="All">All Statuses</option>
+              <option value="New">New</option>
+              <option value="Contacted">Contacted</option>
+              <option value="Closed">Closed</option>
+            </select>
+          </div>
         </div>
       </div>
 
@@ -181,10 +213,19 @@ export default function ManageInquiriesPage() {
             >
               {/* Top row */}
               <div className="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-border-light">
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-3 flex-wrap">
                   <span className="text-[10px] text-text-light font-bold uppercase">{lead.id}</span>
                   <span className="text-text-light/50">&bull;</span>
                   <span className="text-[10px] text-text-light font-medium">{lead.date}</span>
+                  <span
+                    className={`text-[9px] font-bold uppercase px-2 py-0.5 rounded ${
+                      lead.type === "buy-now"
+                        ? "bg-primary/10 text-primary"
+                        : "bg-gray-100 text-text-light"
+                    }`}
+                  >
+                    {lead.type === "buy-now" ? "Buy Now" : "Contact"}
+                  </span>
                 </div>
 
                 {/* Status Update Selector */}
@@ -232,10 +273,33 @@ export default function ManageInquiriesPage() {
                 </div>
 
                 {/* Message content column */}
-                <div className="md:col-span-8 bg-surface/30 p-4 rounded-xl border border-border-light/50">
-                  <p className="text-xs leading-relaxed text-text-muted italic">
-                    &ldquo;{lead.message}&rdquo;
-                  </p>
+                <div className="md:col-span-8 bg-surface/30 p-4 rounded-xl border border-border-light/50 space-y-3">
+                  {lead.type === "buy-now" && lead.buyDetails ? (
+                    <div className="text-xs text-text-muted space-y-3">
+                      {lead.buyDetails.propertyDetail && (
+                        <div>
+                          <p className="font-bold text-dark uppercase text-[10px] mb-1">Property Detail</p>
+                          <pre className="whitespace-pre-wrap font-sans">{JSON.stringify(lead.buyDetails.propertyDetail, null, 2)}</pre>
+                        </div>
+                      )}
+                      {lead.buyDetails.applicantDetail && (
+                        <div>
+                          <p className="font-bold text-dark uppercase text-[10px] mb-1">Applicant</p>
+                          <pre className="whitespace-pre-wrap font-sans">{JSON.stringify(lead.buyDetails.applicantDetail, null, 2)}</pre>
+                        </div>
+                      )}
+                      {lead.buyDetails.nokDetail && (
+                        <div>
+                          <p className="font-bold text-dark uppercase text-[10px] mb-1">Next of Kin</p>
+                          <pre className="whitespace-pre-wrap font-sans">{JSON.stringify(lead.buyDetails.nokDetail, null, 2)}</pre>
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <p className="text-xs leading-relaxed text-text-muted italic">
+                      &ldquo;{lead.message}&rdquo;
+                    </p>
+                  )}
                 </div>
               </div>
 

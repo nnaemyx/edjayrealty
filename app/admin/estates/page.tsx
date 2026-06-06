@@ -33,6 +33,7 @@ const emptyForm = {
   priceRange: "",
   priceFrom: "",
   plotSizes: "300sqm, 450sqm, 600sqm",
+  amenities: "Security, Road Network, Drainage",
   status: "available",
   shortDescription: "",
   totalPlots: "100",
@@ -83,6 +84,7 @@ export default function ManageEstatesPage() {
       priceRange: estate.priceRange,
       priceFrom: String(estate.priceFrom),
       plotSizes: estate.plotSizes.join(", "),
+      amenities: estate.amenities?.join(", ") || "",
       status: estate.status,
       shortDescription: estate.shortDescription || estate.description,
       totalPlots: String(estate.totalPlots),
@@ -172,9 +174,9 @@ export default function ManageEstatesPage() {
       priceFrom: parseFloat(formData.priceFrom) || 1000000,
       image: mainImage || DEFAULT_IMAGE,
       images: galleryImages.length > 0 ? galleryImages : [mainImage || DEFAULT_IMAGE],
-      plotSizes: formData.plotSizes.split(",").map((s) => s.trim()),
+      plotSizes: formData.plotSizes.split(",").map((s) => s.trim()).filter(Boolean),
       features: editingEstate?.features || ["Perimeter Fencing", "Gate House"],
-      amenities: editingEstate?.amenities || ["Security", "Road Network"],
+      amenities: formData.amenities.split(",").map((s) => s.trim()).filter(Boolean),
       totalPlots: parseInt(formData.totalPlots) || 100,
       availablePlots: parseInt(formData.availablePlots) || 100,
       status: formData.status as any,
@@ -466,6 +468,22 @@ export default function ManageEstatesPage() {
               </div>
             </div>
           )}
+
+          <div>
+            <label htmlFor="estate-amenities" className="block text-[10px] font-bold uppercase tracking-wider text-text-light mb-1">
+              Amenities (comma-separated)
+            </label>
+            <input
+              type="text"
+              id="estate-amenities"
+              name="amenities"
+              value={formData.amenities}
+              onChange={handleInputChange}
+              placeholder="e.g. Security, Road Network, Drainage, Street Lights"
+              className="w-full px-3 py-2 rounded-xl border border-border text-xs focus:border-primary outline-none"
+            />
+            <p className="text-[10px] text-text-light mt-1">Displayed on the estate detail page.</p>
+          </div>
 
           <div>
             <label htmlFor="estate-desc" className="block text-[10px] font-bold uppercase tracking-wider text-text-light mb-1">

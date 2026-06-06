@@ -220,13 +220,19 @@ export default async function EstateDetailPage({ params }: EstatePageProps) {
 
                 {/* Instant CTA */}
                 <div className="mt-8 space-y-3">
+                  <Link
+                    href={`/buy?estate=${estate.id}`}
+                    className="w-full bg-primary hover:bg-primary-light text-white text-center py-3.5 rounded-xl font-bold block transition-all shadow-lg shadow-primary/10"
+                  >
+                    Buy Now
+                  </Link>
                   <a
                     href={whatsappUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="w-full bg-primary hover:bg-primary-light text-white text-center py-3.5 rounded-xl font-bold block transition-all shadow-lg shadow-primary/10"
+                    className="w-full border border-white/20 hover:border-white/40 text-white text-center py-3 rounded-xl font-semibold block transition-all text-sm"
                   >
-                    Discuss With Agent
+                    Chat on WhatsApp
                   </a>
                 </div>
               </div>

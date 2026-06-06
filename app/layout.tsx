@@ -5,6 +5,10 @@ import Footer from "./components/Footer";
 import WhatsAppButton from "./components/WhatsAppButton";
 
 export const metadata: Metadata = {
+  icons: {
+    icon: "/logo.png",
+    apple: "/logo.png",
+  },
   title: {
     default: "Edjay Realty | Premium Real Estate Investment in Nigeria",
     template: "%s | Edjay Realty",

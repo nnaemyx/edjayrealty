@@ -25,6 +25,8 @@ export async function POST(request: NextRequest) {
       estate: data.estate || "General Inquiry",
       date: data.date || new Date().toISOString().split("T")[0],
       status: data.status || "New",
+      type: data.type === "buy-now" ? "buy-now" : "contact",
+      buyDetails: data.buyDetails,
     };
     await saveInquiry(newInquiry);
     return Response.json({ success: true, message: "Inquiry submitted successfully", inquiry: newInquiry });
