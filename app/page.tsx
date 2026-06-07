@@ -7,6 +7,7 @@ import TestimonialCarousel from "./components/TestimonialCarousel";
 import GalleryGrid from "./components/GalleryGrid";
 import ContactForm from "./components/ContactForm";
 import { buildWhatsAppUrl } from "./lib/whatsapp";
+import NewsletterForm from "./components/NewsletterForm";
 
 export default async function Home() {
   const estates = await getEstates();
@@ -527,6 +528,27 @@ export default async function Home() {
             <div className="lg:col-span-7">
               <ContactForm />
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ---------------- SECTION 7B: NEWSLETTER CTA ---------------- */}
+      <section id="newsletter-cta" className="py-20 bg-dark text-white relative overflow-hidden border-t border-white/5">
+        <div className="absolute top-0 right-0 w-80 h-80 bg-primary/10 rounded-full blur-[120px] pointer-events-none" />
+        <div className="absolute bottom-0 left-0 w-80 h-80 bg-accent/5 rounded-full blur-[120px] pointer-events-none" />
+        
+        <div className="container mx-auto relative z-10 max-w-4xl text-center px-4">
+          <span className="inline-block text-xs font-bold uppercase tracking-widest text-primary-light mb-3">
+            Newsletter Subscription
+          </span>
+          <h2 className="text-3xl sm:text-4xl font-bold font-[family-name:var(--font-heading)] text-white mb-4">
+            Get Real Estate Insights Delivered
+          </h2>
+          <p className="text-gray-300 text-sm sm:text-base max-w-xl mx-auto mb-8 leading-relaxed">
+            Subscribe to our weekly newsletter to receive curated property lists, market appreciation reports, and legal guides directly in your inbox.
+          </p>
+          <div className="max-w-md mx-auto bg-white/5 backdrop-blur-md border border-white/10 p-6 sm:p-8 rounded-2xl shadow-xl">
+            <NewsletterForm />
           </div>
         </div>
       </section>

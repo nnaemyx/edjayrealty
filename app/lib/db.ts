@@ -509,3 +509,44 @@ export async function getAffiliatePackages(): Promise<typeof mockAffiliatePackag
     return [];
   }
 }
+
+// ---------------- NEWSLETTER SUBSCRIBERS CRUD ----------------
+
+export interface NewsletterSubscriber {
+  email: string;
+  name?: string;
+  subscribedAt: string;
+  status: "active" | "unsubscribed";
+}
+
+export async function getNewsletterSubscribers(): Promise<NewsletterSubscriber[]> {
+  try {
+    const db = await getDb();
+    if (!db) return [];
+    const items = await db.collection("newsletter").find({}).sort({ subscribedAt: -1 }).toArray();
+    return items.map((item: any) => {
+      const { _id, ...rest } = item;
+      return { email: item._id, ...rest } as NewsletterSubscriber;
+    });
+  } catch (error) {
+    console.error("Failed to fetch newsletter subscribers from Mongo.", error);
+    return [];
+  }
+}
+
+export async function saveNewsletterSubscriber(subscriber: NewsletterSubscriber): Promise<void> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not connected");
+  await db.collection("newsletter").replaceOne(
+    { _id: subscriber.email } as any,
+    { ...subscriber, _id: subscriber.email } as any,
+    { upsert: true }
+  );
+}
+
+export async function deleteNewsletterSubscriber(email: string): Promise<void> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not connected");
+  await db.collection("newsletter").deleteOne({ _id: email } as any);
+}
+

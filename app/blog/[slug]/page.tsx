@@ -2,6 +2,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { notFound } from "next/navigation";
 import { getBlogPostBySlug, getBlogPosts } from "../../lib/db";
+import NewsletterForm from "../../components/NewsletterForm";
 
 interface BlogPageProps {
   params: Promise<{ slug: string }>;
@@ -19,100 +20,6 @@ export default async function BlogDetailPage({ params }: BlogPageProps) {
   const allPosts = await getBlogPosts();
   const relatedPosts = allPosts.filter((p) => p.slug !== slug).slice(0, 2);
 
-  // Generate fallback detailed rich text content based on the post slug
-  const getRichContent = () => {
-    switch (post.slug) {
-      case "why-invest-in-nigerian-real-estate":
-        return (
-          <>
-            <p>
-              Investing in Nigerian real estate continues to be one of the most reliable vehicles for wealth creation and capital preservation. As the country's population expands rapidly, the demand for housing, commercial spaces, and agricultural lands climbs at unprecedented rates.
-            </p>
-            <h3>1. High Capital Appreciation Potential</h3>
-            <p>
-              Unlike developed economies where real estate appreciation averages 3-5% annually, prime locations in Nigeria—specifically fast-developing hubs in Anambra (like Awka) and the Federal Capital Territory (Abuja)—frequently experience appreciation rates between <strong>25% to 40% annually</strong>. Buying land in these corridors is not just a purchase; it is a rapid multiplier of wealth.
-            </p>
-            <blockquote>
-              &ldquo;Don&apos;t wait to buy land. Buy land and wait. The best time to buy was yesterday; the second best time is today.&rdquo;
-            </blockquote>
-            <h3>2. Hedge Against Inflation</h3>
-            <p>
-              With shifting currency values and economic pressures, placing capital in liquid cash can lead to erosion of buying power. Real estate is a tangible asset that inherently acts as a hedge. The value of properties adapts and outpaces inflationary surges, protecting your purchasing power.
-            </p>
-            <h3>3. Cash Flow through Rental and Resale</h3>
-            <p>
-              Whether you plan to develop a multi-family residential building, list commercial shops, or simply hold undeveloped land to sell to developers later, real estate offers multiple cash exit strategies.
-            </p>
-            <p>
-              Before investing, ensure you are buying from verified agencies. Platforms like <strong>Edjay Realty</strong> ensure every property is fully registered with dispute-free documentation, saving you from legal bottlenecks and bad deals.
-            </p>
-          </>
-        );
-
-      case "land-ownership-guide-nigeria":
-        return (
-          <>
-            <p>
-              Navigating land ownership in Nigeria requires a solid understanding of the legal frameworks, title types, and government regulations. A mistake in verification can lead to substantial financial loss. Here is your comprehensive guide to getting it right.
-            </p>
-            <h3>1. The Land Use Act of 1978</h3>
-            <p>
-              The Land Use Act vests all lands within a state in the Governor of that state, who holds it in trust for the common benefit of all citizens. Therefore, land ownership is granted via a leasehold system, usually for a period of 99 years.
-            </p>
-            <h3>2. Essential Land Titles to Know</h3>
-            <ul>
-              <li>
-                <strong>Certificate of Occupancy (C of O):</strong> The most important document issued directly by the State Governor to confirm ownership. A piece of land can only have one C of O.
-              </li>
-              <li>
-                <strong>Deed of Assignment:</strong> The legal document that transfers ownership from the seller (assignor) to the buyer (assignee). Always request this.
-              </li>
-              <li>
-                <strong>Survey Plan:</strong> Details the exact boundary dimensions and coordinates of the land, mapped by a licensed surveyor.
-              </li>
-              <li>
-                <strong>Governor&apos;s Consent:</strong> Required when a land with an existing C of O is sold to another person. The governor must consent to the transfer.
-              </li>
-            </ul>
-            <h3>3. Verification Checklist</h3>
-            <p>
-              Before paying for any property, run a search at the Land Registry to verify the title, confirm that the land is not under government acquisition (e.g. agricultural or forest reserves), and conduct a physical inspection.
-            </p>
-          </>
-        );
-
-      case "top-locations-real-estate-investment":
-        return (
-          <>
-            <p>
-              Location remains the absolute number one rule in real estate investment. Buying cheap land in an isolated area with zero economic activity will yield slow returns compared to buying strategic plots in fast-developing corridors.
-            </p>
-            <h3>1. Awka, Anambra State</h3>
-            <p>
-              As the state capital, Awka is experiencing a massive real estate boom. Areas like <strong>Amansea</strong> (close to Nnamdi Azikiwe University) and <strong>Agu-Awka</strong> (prestige residential hub) are top picks. With the state government actively backing estate development, these areas have seen values double in under three years.
-            </p>
-            <h3>2. Lugbe, Abuja (FCT)</h3>
-            <p>
-              Positioned along the Airport Road, Lugbe has transformed into a high-demand satellite town. Its proximity to the city center and the international airport makes it highly sought-after by civil servants and commercial developers.
-            </p>
-            <h3>3. Onitsha-Owerri Road Corridor</h3>
-            <p>
-              A major commercial artery in the Southeast. Land here is prime for logistics hubs, warehouse yards, and commercial plazas due to the massive trade traffic passing through daily.
-            </p>
-            <p>
-              Edjay Realty currently manages premium estates in all these strategic zones. Check out our <strong>Genesis City Estate</strong> or <strong>The Asset City</strong> in Lugbe to start your investment journey.
-            </p>
-          </>
-        );
-
-      default:
-        return (
-          <p>
-            Real estate remains the ultimate vehicle for securing generational wealth. Stay tuned as we update our blog with more news, advice, and market insights.
-          </p>
-        );
-    }
-  };
 
   return (
     <div className="min-h-screen bg-surface/30 pt-20">
@@ -187,7 +94,7 @@ export default async function BlogDetailPage({ params }: BlogPageProps) {
                 {post.content ? (
                   <div dangerouslySetInnerHTML={{ __html: post.content }} />
                 ) : (
-                  getRichContent()
+                  <p className="italic text-text-light">This blog post has no content preview available.</p>
                 )}
               </div>
 
@@ -260,6 +167,17 @@ export default async function BlogDetailPage({ params }: BlogPageProps) {
                 >
                   Explore Estates
                 </Link>
+              </div>
+
+              {/* Newsletter CTA Widget */}
+              <div className="bg-gradient-to-br from-surface to-surface-alt border border-border/50 rounded-2xl p-6 shadow-sm">
+                <h3 className="text-base font-bold font-[family-name:var(--font-heading)] text-dark mb-2">
+                  Stay in the Loop
+                </h3>
+                <p className="text-xs text-text-muted mb-4 leading-relaxed">
+                  Subscribe to our newsletter to receive the latest real estate updates and investment opportunities.
+                </p>
+                <NewsletterForm />
               </div>
             </aside>
           </div>
