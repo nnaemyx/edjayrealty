@@ -427,14 +427,17 @@ export async function getStats(): Promise<typeof defaultStats> {
 export async function getWhyChooseUs(): Promise<typeof mockWhyChooseUs> {
   try {
     const db = await getDb();
-    if (!db) return [];
+    if (!db) return mockWhyChooseUs;
     const items = await db.collection("whyChooseUs").find({}).toArray();
+    if (items.length === 0) {
+      return mockWhyChooseUs;
+    }
     return items.map((item: any) => {
       const { _id, ...rest } = item;
       return rest;
     }) as any;
   } catch (error) {
-    return [];
+    return mockWhyChooseUs;
   }
 }
 
