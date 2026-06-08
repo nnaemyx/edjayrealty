@@ -165,6 +165,40 @@ export const defaultStats = {
   investmentVolume: 0,
 };
 
+export interface CeoAchievement {
+  label: string;
+  value: string;
+}
+
+export interface CeoProfile {
+  sectionLabel: string;
+  name: string;
+  role: string;
+  tagline: string;
+  image: string;
+  bioParagraph1: string;
+  bioParagraph2: string;
+  achievements: CeoAchievement[];
+}
+
+export const defaultCeoProfile: CeoProfile = {
+  sectionLabel: "Meet The Founder",
+  name: "Edjay Okonkwo",
+  role: "Founder & CEO",
+  tagline: "We bank the future",
+  image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=600&q=80",
+  bioParagraph1:
+    "With over 10 years of experience in Nigerian real estate, Edjay founded the company with a vision to make property investment accessible and trustworthy. His passion for building communities and his commitment to integrity have been the driving forces behind every project.",
+  bioParagraph2:
+    "Under his leadership, Edjay Realty has grown from a small property consultancy into a leading real estate development firm in Southeast Nigeria, delivering over 850 verified land allocations and managing 4 premium estates across Anambra and Abuja.",
+  achievements: [
+    { label: "Years in Real Estate", value: "10+" },
+    { label: "Estates Developed", value: "4+" },
+    { label: "Properties Delivered", value: "850+" },
+    { label: "Happy Investors", value: "1,200+" },
+  ],
+};
+
 // ---------------- ESTATES CRUD ----------------
 
 export async function getEstates(): Promise<Estate[]> {
@@ -397,6 +431,30 @@ export async function saveStats(stats: typeof defaultStats): Promise<void> {
   );
 }
 
+export async function getCeoProfile(): Promise<CeoProfile> {
+  try {
+    const db = await getDb();
+    if (!db) return defaultCeoProfile;
+    const item = await db.collection("ceo").findOne({ _id: "ceo-profile" } as any);
+    if (!item) return defaultCeoProfile;
+    const { _id, ...rest } = item;
+    return { ...defaultCeoProfile, ...rest } as CeoProfile;
+  } catch (error) {
+    console.error("Failed to fetch CEO profile from Mongo.", error);
+    return defaultCeoProfile;
+  }
+}
+
+export async function saveCeoProfile(profile: CeoProfile): Promise<void> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not connected");
+  await db.collection("ceo").replaceOne(
+    { _id: "ceo-profile" } as any,
+    { ...profile, _id: "ceo-profile" } as any,
+    { upsert: true }
+  );
+}
+
 export async function getTeamMembers(): Promise<TeamMember[]> {
   try {
     const db = await getDb();
@@ -454,3 +512,44 @@ export async function getAffiliatePackages(): Promise<typeof mockAffiliatePackag
     return [];
   }
 }
+
+// ---------------- NEWSLETTER SUBSCRIBERS CRUD ----------------
+
+export interface NewsletterSubscriber {
+  email: string;
+  name?: string;
+  subscribedAt: string;
+  status: "active" | "unsubscribed";
+}
+
+export async function getNewsletterSubscribers(): Promise<NewsletterSubscriber[]> {
+  try {
+    const db = await getDb();
+    if (!db) return [];
+    const items = await db.collection("newsletter").find({}).sort({ subscribedAt: -1 }).toArray();
+    return items.map((item: any) => {
+      const { _id, ...rest } = item;
+      return { email: item._id, ...rest } as NewsletterSubscriber;
+    });
+  } catch (error) {
+    console.error("Failed to fetch newsletter subscribers from Mongo.", error);
+    return [];
+  }
+}
+
+export async function saveNewsletterSubscriber(subscriber: NewsletterSubscriber): Promise<void> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not connected");
+  await db.collection("newsletter").replaceOne(
+    { _id: subscriber.email } as any,
+    { ...subscriber, _id: subscriber.email } as any,
+    { upsert: true }
+  );
+}
+
+export async function deleteNewsletterSubscriber(email: string): Promise<void> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not connected");
+  await db.collection("newsletter").deleteOne({ _id: email } as any);
+}
+

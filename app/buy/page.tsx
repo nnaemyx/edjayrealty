@@ -21,7 +21,7 @@ export default async function BuyPage() {
             Buy Now
           </h1>
           <p className="text-text-muted text-sm sm:text-base max-w-xl mx-auto">
-            Ready to invest? Tell us which estate you&apos;re interested in and we&apos;ll handle the rest — from plot selection to documentation.
+            Ready to invest? Complete the form below — your application is saved to our team and WhatsApp opens so you can confirm with us directly.
           </p>
         </div>
 

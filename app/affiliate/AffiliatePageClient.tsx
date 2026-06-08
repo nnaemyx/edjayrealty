@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { buildWhatsAppUrl, navigateWhatsAppWindow } from "../lib/whatsapp";
 
 interface AffiliatePackage {
   name: string;
@@ -27,8 +28,17 @@ export default function AffiliatePageClient({ affiliatePackages }: AffiliatePage
     e.preventDefault();
     setStatus("submitting");
 
+    const whatsappMessage = [
+      "Hello Edjay Realty, I submitted an affiliate application:",
+      `Name: ${formData.name}`,
+      `Email: ${formData.email}`,
+      `Phone: ${formData.phone}`,
+      `Experience: ${formData.experience}`,
+      `Promotion Channels: ${formData.channels}`,
+    ].join("\n");
+    const waWindow = window.open("", "_blank");
+
     try {
-      // Log affiliate inquiries in the database too!
       const response = await fetch("/api/inquiries", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -45,9 +55,11 @@ export default function AffiliatePageClient({ affiliatePackages }: AffiliatePage
         throw new Error("Failed to submit affiliate inquiry");
       }
 
+      navigateWhatsAppWindow(waWindow, whatsappMessage);
       setStatus("success");
       setFormData({ name: "", email: "", phone: "", experience: "", channels: "" });
     } catch (err) {
+      waWindow?.close();
       console.error(err);
       setStatus("error");
     }
@@ -239,9 +251,17 @@ export default function AffiliatePageClient({ affiliatePackages }: AffiliatePage
                 <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
               <h3 className="text-xl font-bold mb-2">Application Received!</h3>
-              <p className="text-sm opacity-85 leading-relaxed">
-                Thank you for applying to the Edjay Realty affiliate program. Our onboarding coordinator will review your profile and contact you via email/phone within 48 hours to complete training.
+              <p className="text-sm opacity-85 leading-relaxed mb-4">
+                Your application is saved. WhatsApp should have opened — tap send there to reach us directly. Our onboarding team will also follow up within 48 hours.
               </p>
+              <a
+                href={buildWhatsAppUrl("Hello Edjay Realty, I submitted an affiliate application.")}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center justify-center gap-2 bg-[#25D366] hover:bg-[#20bd5a] text-white px-5 py-2.5 rounded-xl font-semibold text-sm transition-all"
+              >
+                Open WhatsApp
+              </a>
             </div>
           ) : (
             <form onSubmit={handleSubmit} className="space-y-5">

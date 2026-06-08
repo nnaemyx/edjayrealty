@@ -6,6 +6,7 @@ import { formatCurrency } from "../../lib/utils";
 import FAQ from "../../components/FAQ";
 import ContactForm from "../../components/ContactForm";
 import EstateGalleryCarousel from "../../components/EstateGalleryCarousel";
+import { buildWhatsAppUrl } from "../../lib/whatsapp";
 
 interface EstatePageProps {
   params: Promise<{ id: string }>;
@@ -19,10 +20,9 @@ export default async function EstateDetailPage({ params }: EstatePageProps) {
     notFound();
   }
 
-  // Create WhatsApp message link
-  const whatsappUrl = `https://wa.me/2348012345678?text=Hello%20Edjay%20Realty%2C%20I%27m%20interested%20in%20${encodeURIComponent(
-    estate.name
-  )}%20at%20${encodeURIComponent(estate.location)}.`;
+  const whatsappUrl = buildWhatsAppUrl(
+    `Hello Edjay Realty, I'm interested in ${estate.name} at ${estate.location}.`
+  );
 
   return (
     <div className="min-h-screen bg-surface/30 pt-20">

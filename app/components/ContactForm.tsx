@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { buildWhatsAppUrl, navigateWhatsAppWindow } from "../lib/whatsapp";
 
 interface ContactFormProps {
   estate?: string;
@@ -19,13 +20,24 @@ export default function ContactForm({ estate }: ContactFormProps) {
     e.preventDefault();
     setStatus("submitting");
 
+    const estateName = estate || "General Inquiry";
+    const whatsappMessage = [
+      "Hello Edjay Realty, I submitted an inquiry:",
+      `Name: ${formData.name}`,
+      `Email: ${formData.email}`,
+      `Phone: ${formData.phone}`,
+      `Estate/Interest: ${estateName}`,
+      `Message: ${formData.message}`,
+    ].join("\n");
+    const waWindow = window.open("", "_blank");
+
     try {
       const response = await fetch("/api/inquiries", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           ...formData,
-          estate: estate || "General Inquiry",
+          estate: estateName,
         }),
       });
 
@@ -33,9 +45,11 @@ export default function ContactForm({ estate }: ContactFormProps) {
         throw new Error("Failed to submit inquiry");
       }
 
+      navigateWhatsAppWindow(waWindow, whatsappMessage);
       setStatus("success");
       setFormData({ name: "", email: "", phone: "", message: "" });
     } catch (error) {
+      waWindow?.close();
       console.error(error);
       setStatus("error");
     }
@@ -61,8 +75,18 @@ export default function ContactForm({ estate }: ContactFormProps) {
           </svg>
           <h4 className="text-lg font-bold mb-1">Message Sent Successfully!</h4>
           <p className="text-sm opacity-85">
-            Thank you for reaching out. A representative will contact you within 24 hours.
+            Your inquiry is saved. WhatsApp should have opened — tap send there to reach us directly. We will also follow up within 24 hours.
           </p>
+          <a
+            href={buildWhatsAppUrl(
+              `Hello Edjay Realty, I submitted an inquiry about ${estate || "your properties"}.`
+            )}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mt-4 inline-flex items-center justify-center gap-2 bg-[#25D366] hover:bg-[#20bd5a] text-white px-5 py-2.5 rounded-xl font-semibold text-sm transition-all"
+          >
+            Open WhatsApp
+          </a>
           <button
             onClick={() => setStatus("idle")}
             className="mt-5 text-sm font-semibold underline hover:text-primary-dark transition-colors"

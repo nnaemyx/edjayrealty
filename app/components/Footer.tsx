@@ -1,5 +1,7 @@
 import Link from "next/link";
 import Logo from "./Logo";
+import { buildWhatsAppUrl } from "../lib/whatsapp";
+import NewsletterForm from "./NewsletterForm";
 
 const quickLinks = [
   { label: "Home", href: "/" },
@@ -29,7 +31,7 @@ export default function Footer() {
     <footer className="bg-dark text-white" id="site-footer">
       {/* Main Footer */}
       <div className="container mx-auto py-16">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10 lg:gap-12">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-10 lg:gap-12">
           {/* Brand Column */}
           <div className="lg:col-span-1">
             <Logo variant="light" />
@@ -118,7 +120,7 @@ export default function Footer() {
                 <span className="text-white/70 text-sm">info@edjayrealty.com</span>
               </div>
               <a
-                href="https://wa.me/2348012345678"
+                href={buildWhatsAppUrl("Hello Edjay Realty")}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-2 mt-2 bg-primary/20 hover:bg-primary/30 text-primary px-4 py-2 rounded-lg text-sm font-medium transition-all"
@@ -129,6 +131,17 @@ export default function Footer() {
                 Chat With Us
               </a>
             </div>
+          </div>
+
+          {/* Newsletter Column */}
+          <div>
+            <h3 className="text-sm font-semibold uppercase tracking-wider text-white/40 mb-4 font-[family-name:var(--font-heading)]">
+              Stay Updated
+            </h3>
+            <p className="text-white/60 text-xs mb-4 leading-relaxed">
+              Subscribe to get exclusive property alerts, market updates, and investment guides.
+            </p>
+            <NewsletterForm />
           </div>
         </div>
       </div>

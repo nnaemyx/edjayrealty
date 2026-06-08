@@ -13,7 +13,11 @@ export default function BlogListing({ blogPosts }: BlogListingProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All");
 
-  const categories = ["All", "Investment", "Guide", "Market Trends"];
+  // Dynamically extract all unique categories from blog posts
+  const categories = [
+    "All",
+    ...Array.from(new Set(blogPosts.map((post) => post.category).filter(Boolean)))
+  ];
 
   // Filter blog posts
   const filteredPosts = blogPosts.filter((post) => {

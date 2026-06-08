@@ -14,6 +14,7 @@ import {
   UNIT_OPTIONS,
   PAYMENT_PACKAGES,
 } from "./buyFormOptions";
+import { buildWhatsAppUrl, navigateWhatsAppWindow } from "../lib/whatsapp";
 
 interface BuyFormProps {
   estates: Estate[];
@@ -57,8 +58,20 @@ const emptyForm = {
   nokRelationship: "",
 };
 
-function formatBuyMessage(form: typeof emptyForm, estateName: string, idFile?: string) {
+function formatBuyMessage(
+  form: typeof emptyForm,
+  estateName: string,
+  idFile?: string,
+  forWhatsApp = false
+) {
+  const docNote = idFile
+    ? `ID Document uploaded: ${idFile}`
+    : forWhatsApp
+      ? "ID Document: Not uploaded — I will attach it on WhatsApp."
+      : "ID Document: Not uploaded";
+
   const lines = [
+    forWhatsApp ? "Hello Edjay Realty, I submitted a buy application:" : "",
     "=== PROPERTY DETAIL ===",
     `Estate: ${estateName}`,
     `Property Template: ${form.propertyTemplate}`,
@@ -82,7 +95,7 @@ function formatBuyMessage(form: typeof emptyForm, estateName: string, idFile?: s
     `Phone: ${form.phone}`,
     `Email: ${form.email}`,
     `Means of ID: ${form.meansOfIdentification}`,
-    idFile ? `ID Document: ${idFile}` : "",
+    docNote,
     form.address ? `Address: ${form.address}` : "",
     "",
     "=== NEXT OF KIN ===",
@@ -91,8 +104,14 @@ function formatBuyMessage(form: typeof emptyForm, estateName: string, idFile?: s
     `Phone: ${form.nokPhone}`,
     `Email: ${form.nokEmail}`,
     `Relationship: ${form.nokRelationship}`,
+    "",
+    forWhatsApp
+      ? "=== DOCUMENTS ===\nPlease attach on WhatsApp: valid ID (" +
+        (form.meansOfIdentification || "NIN/Passport") +
+        "), passport photo if available, and proof of payment when ready."
+      : "",
   ];
-  return lines.filter((l) => l !== undefined).join("\n");
+  return lines.filter((l) => l !== undefined && l !== "").join("\n");
 }
 
 export default function BuyForm({ estates }: BuyFormProps) {
@@ -105,6 +124,7 @@ export default function BuyForm({ estates }: BuyFormProps) {
   const [uploadingId, setUploadingId] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [savedToDb, setSavedToDb] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const availableEstates = estates.filter((e) => e.status !== "sold-out");
@@ -174,6 +194,8 @@ export default function BuyForm({ estates }: BuyFormProps) {
     setError(null);
 
     const estateName = selectedEstate?.name || form.estateId;
+    const whatsappMessage = formatBuyMessage(form, estateName, idFileUrl, true);
+    const waWindow = window.open("", "_blank");
     const buyDetails = {
       propertyDetail: {
         estate: estateName,
@@ -214,6 +236,7 @@ export default function BuyForm({ estates }: BuyFormProps) {
       },
     };
 
+    let dbSaved = false;
     try {
       const res = await fetch("/api/inquiries", {
         method: "POST",
@@ -228,19 +251,23 @@ export default function BuyForm({ estates }: BuyFormProps) {
           buyDetails,
         }),
       });
-      if (!res.ok) {
-        const err = await res.json();
-        throw new Error(err.error || "Submission failed");
-      }
-      setSubmitted(true);
-    } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "Something went wrong. Please try again.");
-    } finally {
-      setSubmitting(false);
+      dbSaved = res.ok;
+    } catch {
+      dbSaved = false;
     }
+
+    const opened = navigateWhatsAppWindow(waWindow, whatsappMessage);
+    if (!opened) {
+      window.open(buildWhatsAppUrl(whatsappMessage), "_blank", "noopener,noreferrer");
+    }
+
+    setSavedToDb(dbSaved);
+    setSubmitted(true);
+    setSubmitting(false);
   };
 
   if (submitted) {
+    const estateName = selectedEstate?.name || form.estateId;
     return (
       <div className={`${sectionClass} text-center animate-fade-in`}>
         <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-6">
@@ -251,18 +278,28 @@ export default function BuyForm({ estates }: BuyFormProps) {
         <h2 className="text-2xl font-bold text-dark font-[family-name:var(--font-heading)] mb-3">
           Application Submitted!
         </h2>
-        <p className="text-text-muted text-sm mb-6 max-w-md mx-auto">
-          Thank you, {form.firstName}. Your buy application has been received. Our team will contact you within 24 hours.
+        <p className="text-text-muted text-sm mb-4 max-w-md mx-auto">
+          Thank you, {form.firstName}. WhatsApp should have opened with your application details — tap Send to confirm with our team.
+          {savedToDb
+            ? " A copy is also saved in our system."
+            : " Send the WhatsApp message to complete your request."}
         </p>
+        <div className="text-amber-800 bg-amber-50 border border-amber-200 text-sm p-4 rounded-xl mb-4 max-w-md mx-auto text-left">
+          <p className="font-bold mb-2">Attach these on WhatsApp:</p>
+          <ul className="list-disc list-inside space-y-1 text-amber-900/90">
+            <li>{form.meansOfIdentification || "Valid ID"} (photo or PDF)</li>
+            <li>Passport photograph (if available)</li>
+            {!idFileUrl && <li>Your ID file — not uploaded on the form</li>}
+            {idFileUrl && <li>ID uploaded — you may still attach a clearer copy</li>}
+          </ul>
+        </div>
         <a
-          href={`https://wa.me/2348012345678?text=${encodeURIComponent(
-            `Hello Edjay Realty, I submitted a buy application for ${selectedEstate?.name || "property"}.`
-          )}`}
+          href={buildWhatsAppUrl(formatBuyMessage(form, estateName, idFileUrl, true))}
           target="_blank"
           rel="noopener noreferrer"
           className="inline-flex items-center justify-center gap-2 bg-[#25D366] hover:bg-[#20bd5a] text-white px-6 py-3 rounded-xl font-semibold text-sm transition-all"
         >
-          Chat on WhatsApp
+          Open WhatsApp Again
         </a>
       </div>
     );
@@ -270,6 +307,19 @@ export default function BuyForm({ estates }: BuyFormProps) {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-8">
+      <div className="bg-primary/5 border border-primary/20 rounded-2xl p-5 sm:p-6">
+        <h3 className="text-sm font-bold text-dark mb-2">Documents &amp; information required</h3>
+        <ul className="text-sm text-text-muted space-y-1.5 list-disc list-inside">
+          <li>Valid ID: {ID_TYPES.join(", ")}</li>
+          <li>Passport photograph (recent)</li>
+          <li>Proof of payment / deposit slip (when paying)</li>
+          <li>Upload ID on this form if you can — you will also attach files on WhatsApp after submit</li>
+          <li>
+            <strong className="text-dark">Submit opens WhatsApp</strong> with your details pre-filled; tap Send to reach our team
+          </li>
+        </ul>
+      </div>
+
       {error && (
         <div className="bg-red-50 border border-red-200 text-red-700 text-sm p-4 rounded-xl">{error}</div>
       )}
@@ -500,6 +550,9 @@ export default function BuyForm({ estates }: BuyFormProps) {
               onChange={handleIdUpload}
               className={`${inputClass} file:mr-3 file:py-1 file:px-3 file:rounded-lg file:border-0 file:bg-primary file:text-white file:text-xs`}
             />
+            <p className="text-xs text-text-muted mt-1.5">
+              JPG, PNG, or PDF. If upload fails, attach the file on WhatsApp after submitting.
+            </p>
             {uploadingId && <p className="text-xs text-text-muted mt-1">Uploading...</p>}
             {idFile && !uploadingId && <p className="text-xs text-primary mt-1">{idFile.name}</p>}
           </div>
@@ -559,7 +612,7 @@ export default function BuyForm({ estates }: BuyFormProps) {
         disabled={submitting || uploadingId}
         className="w-full bg-primary hover:bg-primary-dark text-white font-bold py-4 rounded-xl text-base transition-all disabled:opacity-60 shadow-lg shadow-primary/10"
       >
-        {submitting ? "Submitting Application..." : "Submit Application"}
+        {submitting ? "Opening WhatsApp..." : "Submit & Send via WhatsApp"}
       </button>
     </form>
   );
