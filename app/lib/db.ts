@@ -550,3 +550,78 @@ export async function deleteNewsletterSubscriber(email: string): Promise<void> {
   await db.collection("newsletter").deleteOne({ _id: email } as any);
 }
 
+// ---------------- INVOICES CRUD ----------------
+
+export interface Invoice {
+  id: string;
+  invoiceNumber?: string;
+  clientName: string;
+  clientPhone: string;
+  estateName: string;
+  quantity: number;
+  unitPrice: number;
+  totalAmount: number;
+  amountPaid: number;
+  amountInWords: string;
+  paymentMethod: "installment" | "one-off";
+  installmentMonths?: number;
+  bankName: string;
+  description: string;
+  receiptUrl?: string;
+  createdAt: string;
+}
+
+export async function getInvoices(): Promise<Invoice[]> {
+  try {
+    const db = await getDb();
+    if (!db) return [];
+    const items = await db.collection("invoices").find({}).sort({ createdAt: -1 }).toArray();
+    return items.map((item: any) => {
+      const { _id, ...rest } = item;
+      return { id: String(item._id), ...rest } as Invoice;
+    });
+  } catch (error) {
+    console.error("Failed to fetch invoices from Mongo.", error);
+    return [];
+  }
+}
+
+export async function getInvoiceById(id: string): Promise<Invoice | null> {
+  try {
+    const db = await getDb();
+    if (!db) return null;
+    const item = await db.collection("invoices").findOne({ _id: id } as any);
+    if (!item) return null;
+    const { _id, ...rest } = item;
+    return { id: String(item._id), ...rest } as Invoice;
+  } catch (error) {
+    console.error(`Failed to fetch invoice ${id} from Mongo.`, error);
+    return null;
+  }
+}
+
+export async function saveInvoice(invoice: Invoice): Promise<void> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not connected");
+  
+  // If it's a new invoice and doesn't have an invoice number, auto-generate one
+  if (!invoice.invoiceNumber) {
+    const count = await db.collection("invoices").countDocuments();
+    const nextNumber = 1001 + count;
+    invoice.invoiceNumber = `EJ-${nextNumber}`;
+  }
+
+  await db.collection("invoices").replaceOne(
+    { _id: invoice.id } as any,
+    { ...invoice, _id: invoice.id } as any,
+    { upsert: true }
+  );
+}
+
+export async function deleteInvoice(id: string): Promise<void> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not connected");
+  await db.collection("invoices").deleteOne({ _id: id } as any);
+}
+
+

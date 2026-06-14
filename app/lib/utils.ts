@@ -16,3 +16,29 @@ export function formatNumber(num: number): string {
   if (num >= 1_000) return `${(num / 1_000).toFixed(0)}K`;
   return num.toString();
 }
+
+export function numberToWords(num: number): string {
+  if (num === 0) return "Zero Naira Only";
+
+  const a = [
+    "", "One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine",
+    "Ten", "Eleven", "Twelve", "Thirteen", "Fourteen", "Fifteen", "Sixteen",
+    "Seventeen", "Eighteen", "Nineteen"
+  ];
+  const b = [
+    "", "", "Twenty", "Thirty", "Forty", "Fifty", "Sixty", "Seventy", "Eighty", "Ninety"
+  ];
+
+  function helper(n: number): string {
+    if (n < 20) return a[n];
+    if (n < 100) return b[Math.floor(n / 10)] + (n % 10 !== 0 ? " " + a[n % 10] : "");
+    if (n < 1000) return a[Math.floor(n / 100)] + " Hundred" + (n % 100 !== 0 ? " and " + helper(n % 100) : "");
+    if (n < 1000000) return helper(Math.floor(n / 1000)) + " Thousand" + (n % 1000 !== 0 ? (n % 1000 < 100 ? " and " : ", ") + helper(n % 1000) : "");
+    if (n < 1000000000) return helper(Math.floor(n / 1000000)) + " Million" + (n % 1000000 !== 0 ? (n % 1000000 < 100 ? " and " : ", ") + helper(n % 1000000) : "");
+    return helper(Math.floor(n / 1000000000)) + " Billion" + (n % 1000000000 !== 0 ? (n % 1000000000 < 100 ? " and " : ", ") + helper(n % 1000000000) : "");
+  }
+
+  const words = helper(Math.floor(num));
+  return `${words} Naira Only`;
+}
+
