@@ -69,7 +69,10 @@ export function getYouTubeThumbnail(url: string): string {
 export function getAttachmentUrl(url: string): string {
   if (!url) return "";
   const trimmed = url.trim();
-  // Route through our own server-side proxy to force a real download
+  if (trimmed.startsWith("/") || trimmed.startsWith("http://localhost") || trimmed.startsWith("https://localhost")) {
+    return trimmed;
+  }
+  // Route through our own server-side proxy to force a real download for external URLs
   return `/api/download?url=${encodeURIComponent(trimmed)}`;
 }
 

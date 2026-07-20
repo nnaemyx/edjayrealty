@@ -166,12 +166,19 @@ export default function ManageEstatesPage() {
   const handleBrochureChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    if (file.size > 10 * 1024 * 1024) {
+      alert("File too large. Maximum size is 10MB.");
+      return;
+    }
     setUploadingBrochure(true);
     try {
       const fd = new FormData();
       fd.append("file", file);
-      const res = await fetch("/api/admin/upload", { method: "POST", body: fd });
-      if (!res.ok) throw new Error("Brochure upload failed");
+      const res = await fetch("/api/brochures", { method: "POST", body: fd });
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.error || "Brochure upload failed");
+      }
       const data = await res.json();
       setBrochureUrl(data.url);
     } catch (err: any) {
