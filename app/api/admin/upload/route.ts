@@ -35,13 +35,17 @@ export async function POST(request: NextRequest) {
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
 
+    // Determine resource type: use "raw" for PDFs and other documents
+    const isPdf = file.name.toLowerCase().endsWith(".pdf") || file.type === "application/pdf";
+    const resourceType = isPdf ? "raw" : "auto";
+
     // Upload to Cloudinary using a promise wrapper
     const result: any = await new Promise((resolve, reject) => {
       cloudinary.uploader
         .upload_stream(
           {
             folder: "edjayrealty",
-            resource_type: "auto",
+            resource_type: resourceType as any,
           },
           (error, result) => {
             if (error) reject(error);
