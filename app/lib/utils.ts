@@ -66,4 +66,13 @@ export function getYouTubeThumbnail(url: string): string {
   return id ? `https://img.youtube.com/vi/${id}/hqdefault.jpg` : "";
 }
 
+export function getAttachmentUrl(url: string): string {
+  if (!url) return "";
+  const trimmed = url.trim();
+  if (trimmed.includes("cloudinary.com") && trimmed.includes("/upload/")) {
+    return trimmed.replace("/upload/", "/upload/fl_attachment/");
+  }
+  return trimmed;
+}
+
 

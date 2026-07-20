@@ -2,7 +2,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { notFound } from "next/navigation";
 import { getEstateById } from "../../lib/db";
-import { formatCurrency } from "../../lib/utils";
+import { formatCurrency, getAttachmentUrl } from "../../lib/utils";
 import FAQ from "../../components/FAQ";
 import ContactForm from "../../components/ContactForm";
 import EstateGalleryCarousel from "../../components/EstateGalleryCarousel";
@@ -228,7 +228,8 @@ export default async function EstateDetailPage({ params }: EstatePageProps) {
                   </Link>
                   {estate.brochureUrl && (
                     <a
-                      href={estate.brochureUrl}
+                      href={getAttachmentUrl(estate.brochureUrl)}
+                      download
                       target="_blank"
                       rel="noopener noreferrer"
                       className="w-full bg-white/10 hover:bg-white/20 text-white border border-white/20 text-center py-3 rounded-xl font-semibold flex items-center justify-center gap-2 transition-all text-sm"

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { Estate } from "../lib/data";
 import EstateCardCarousel from "./EstateCardCarousel";
+import { getAttachmentUrl } from "../lib/utils";
 
 interface EstateCardProps {
   estate: Estate;
@@ -128,7 +129,8 @@ export default function EstateCard({ estate }: EstateCardProps) {
           </div>
           {brochureUrl && (
             <a
-              href={brochureUrl}
+              href={getAttachmentUrl(brochureUrl)}
+              download
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center justify-center gap-1.5 border border-border hover:bg-surface text-dark py-2.5 rounded-lg text-xs sm:text-sm font-semibold transition-all text-center w-full"
