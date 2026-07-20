@@ -131,8 +131,6 @@ export default function EstateCard({ estate }: EstateCardProps) {
             <a
               href={getAttachmentUrl(brochureUrl)}
               download
-              target="_blank"
-              rel="noopener noreferrer"
               className="flex items-center justify-center gap-1.5 border border-border hover:bg-surface text-dark py-2.5 rounded-lg text-xs sm:text-sm font-semibold transition-all text-center w-full"
             >
               <svg className="w-4 h-4 text-accent flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>

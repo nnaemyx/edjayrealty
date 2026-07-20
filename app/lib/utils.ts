@@ -69,10 +69,8 @@ export function getYouTubeThumbnail(url: string): string {
 export function getAttachmentUrl(url: string): string {
   if (!url) return "";
   const trimmed = url.trim();
-  if (trimmed.includes("cloudinary.com") && trimmed.includes("/upload/")) {
-    return trimmed.replace("/upload/", "/upload/fl_attachment/");
-  }
-  return trimmed;
+  // Route through our own server-side proxy to force a real download
+  return `/api/download?url=${encodeURIComponent(trimmed)}`;
 }
 
 
