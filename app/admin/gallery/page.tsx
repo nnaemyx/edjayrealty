@@ -2,12 +2,15 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import Image from "next/image";
+import { getYouTubeThumbnail } from "../../lib/utils";
 
 interface GalleryItem {
   id: string;
   src: string;
   alt: string;
   category: string;
+  isVideo?: boolean;
+  videoUrl?: string;
 }
 
 const CATEGORIES = ["Estates", "Construction", "Events"];
@@ -15,6 +18,7 @@ const CATEGORIES = ["Estates", "Construction", "Events"];
 const emptyForm = {
   alt: "",
   category: "Estates",
+  videoUrl: "",
 };
 
 export default function ManageGalleryPage() {
@@ -49,7 +53,7 @@ export default function ManageGalleryPage() {
 
   const openEdit = (item: GalleryItem) => {
     setEditingImage(item);
-    setFormData({ alt: item.alt, category: item.category });
+    setFormData({ alt: item.alt, category: item.category, videoUrl: item.videoUrl || "" });
     setImageUrl(item.src);
     setShowAddForm(true);
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -58,7 +62,7 @@ export default function ManageGalleryPage() {
   const closeForm = () => {
     setShowAddForm(false);
     setEditingImage(null);
-    setFormData(emptyForm);
+    setFormData({ ...emptyForm, videoUrl: "" });
     setImageUrl("");
     setError(null);
   };
@@ -83,8 +87,21 @@ export default function ManageGalleryPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!imageUrl) {
-      setError("Please upload an image first.");
+    
+    let finalSrc = imageUrl;
+    const isVideo = !!formData.videoUrl;
+
+    if (isVideo) {
+      const ytThumb = getYouTubeThumbnail(formData.videoUrl);
+      if (!ytThumb) {
+        setError("Invalid YouTube Video URL. Could not parse video ID.");
+        return;
+      }
+      finalSrc = ytThumb;
+    }
+
+    if (!finalSrc) {
+      setError("Please upload an image or enter a YouTube video URL first.");
       return;
     }
     setSubmitting(true);
@@ -92,9 +109,11 @@ export default function ManageGalleryPage() {
 
     const payload: GalleryItem = {
       id: editingImage?.id || `gallery-${Date.now()}`,
-      src: imageUrl,
+      src: finalSrc,
       alt: formData.alt || "Edjay Realty project photo",
       category: formData.category,
+      isVideo,
+      videoUrl: formData.videoUrl,
     };
 
     try {
@@ -199,6 +218,23 @@ export default function ManageGalleryPage() {
           </div>
 
           <div>
+            <label htmlFor="gallery-youtube" className="block text-[10px] font-bold uppercase tracking-wider text-text-light mb-1">
+              OR YouTube Video URL
+            </label>
+            <input
+              type="text"
+              id="gallery-youtube"
+              value={formData.videoUrl}
+              onChange={(e) => setFormData((p) => ({ ...p, videoUrl: e.target.value }))}
+              placeholder="e.g. https://www.youtube.com/watch?v=..."
+              className="w-full px-3 py-2 rounded-xl border border-border text-xs focus:border-primary outline-none"
+            />
+            <p className="text-[10px] text-text-light mt-1">
+              Pasting a YouTube link automatically fetches its preview thumbnail and marks it as playable.
+            </p>
+          </div>
+
+          <div>
             <label htmlFor="gallery-alt" className="block text-[10px] font-bold uppercase tracking-wider text-text-light mb-1">
               Alt Text / Caption
             </label>
@@ -256,6 +292,12 @@ export default function ManageGalleryPage() {
                 <span className="absolute top-2 left-2 px-2 py-0.5 bg-dark/70 text-white text-[9px] font-bold uppercase rounded">
                   {item.category}
                 </span>
+                {item.isVideo && (
+                  <span className="absolute top-2 right-2 px-2 py-0.5 bg-red-600 text-white text-[9px] font-bold uppercase rounded flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 bg-white rounded-full animate-pulse" />
+                    Video
+                  </span>
+                )}
               </div>
               <div className="p-3">
                 <p className="text-xs text-text-muted truncate">{item.alt}</p>

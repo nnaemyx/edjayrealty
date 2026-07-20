@@ -17,6 +17,7 @@ export interface Estate {
   status: "available" | "selling-fast" | "sold-out" | "coming-soon";
   paymentPlans: PaymentPlan[];
   faqs: FAQ[];
+  videoUrls?: string[];
 }
 
 export interface PaymentPlan {
@@ -67,6 +68,8 @@ export interface GalleryImage {
   src: string;
   alt: string;
   category: string;
+  isVideo?: boolean;
+  videoUrl?: string;
 }
 
 export const estates: Estate[] = [

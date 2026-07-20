@@ -22,6 +22,7 @@ interface Estate {
   status: string;
   paymentPlans: any[];
   faqs: any[];
+  videoUrls?: string[];
 }
 
 const DEFAULT_IMAGE = "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=800&q=80";
@@ -38,6 +39,7 @@ const emptyForm = {
   shortDescription: "",
   totalPlots: "100",
   availablePlots: "100",
+  videoUrls: "",
 };
 
 export default function ManageEstatesPage() {
@@ -89,6 +91,7 @@ export default function ManageEstatesPage() {
       shortDescription: estate.shortDescription || estate.description,
       totalPlots: String(estate.totalPlots),
       availablePlots: String(estate.availablePlots),
+      videoUrls: estate.videoUrls?.join("\n") || "",
     });
     setMainImage(estate.image || "");
     setGalleryImages(estate.images || []);
@@ -182,6 +185,7 @@ export default function ManageEstatesPage() {
       status: formData.status as any,
       paymentPlans: editingEstate?.paymentPlans || [],
       faqs: editingEstate?.faqs || [],
+      videoUrls: formData.videoUrls.split("\n").map((v) => v.trim()).filter(Boolean),
     };
 
     try {
@@ -483,6 +487,22 @@ export default function ManageEstatesPage() {
               className="w-full px-3 py-2 rounded-xl border border-border text-xs focus:border-primary outline-none"
             />
             <p className="text-[10px] text-text-light mt-1">Displayed on the estate detail page.</p>
+          </div>
+
+          <div>
+            <label htmlFor="estate-videos" className="block text-[10px] font-bold uppercase tracking-wider text-text-light mb-1">
+              YouTube Video URLs (one per line)
+            </label>
+            <textarea
+              id="estate-videos"
+              name="videoUrls"
+              rows={3}
+              value={formData.videoUrls}
+              onChange={handleInputChange}
+              placeholder="e.g. https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+              className="w-full px-3 py-2 rounded-xl border border-border text-xs focus:border-primary outline-none resize-none"
+            />
+            <p className="text-[10px] text-text-light mt-1">Paste YouTube links to highlight site walkthroughs.</p>
           </div>
 
           <div>

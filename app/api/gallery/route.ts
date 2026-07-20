@@ -27,6 +27,8 @@ export async function PUT(request: NextRequest) {
       src: data.src,
       alt: data.alt || "Gallery image",
       category: data.category || "Estates",
+      isVideo: !!data.isVideo,
+      videoUrl: data.videoUrl || "",
     };
     await saveGalleryImage(image);
     return Response.json({ success: true, image });

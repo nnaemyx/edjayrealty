@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Image from "next/image";
 import { galleryImages as staticGalleryImages, GalleryImage } from "../lib/data";
+import { getYouTubeEmbedUrl } from "../lib/utils";
 
 interface GalleryGridProps {
   limit?: number;
@@ -82,6 +83,16 @@ export default function GalleryGrid({ limit, images }: GalleryGridProps) {
               sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
               className="object-cover transition-transform duration-500 group-hover:scale-110"
             />
+            {/* Play Button Overlay if Video */}
+            {image.isVideo && (
+              <div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none">
+                <div className="w-14 h-14 rounded-full bg-primary/90 text-white flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300 backdrop-blur-sm">
+                  <svg className="w-6 h-6 fill-current ml-0.5" viewBox="0 0 24 24">
+                    <path d="M8 5v14l11-7z" />
+                  </svg>
+                </div>
+              </div>
+            )}
             {/* Overlay */}
             <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-5">
               <span className="text-white/60 text-xs font-semibold uppercase tracking-wider mb-1">
@@ -133,18 +144,30 @@ export default function GalleryGrid({ limit, images }: GalleryGridProps) {
             </svg>
           </button>
 
-          {/* Active Image */}
+          {/* Active Image / Video */}
           <div
-            className="relative max-w-full max-h-[80vh] aspect-[4/3] w-[1000px] h-[750px] overflow-hidden"
+            className={`relative max-w-full max-h-[80vh] w-[1000px] overflow-hidden rounded-2xl bg-black ${
+              displayedImages[lightboxIndex].isVideo ? "aspect-[16/9] h-[562px]" : "aspect-[4/3] h-[750px]"
+            }`}
             onClick={(e) => e.stopPropagation()}
           >
-            <Image
-              src={displayedImages[lightboxIndex].src}
-              alt={displayedImages[lightboxIndex].alt}
-              fill
-              className="object-contain"
-              priority
-            />
+            {displayedImages[lightboxIndex].isVideo && displayedImages[lightboxIndex].videoUrl ? (
+              <iframe
+                src={`${getYouTubeEmbedUrl(displayedImages[lightboxIndex].videoUrl)}?autoplay=1`}
+                title={displayedImages[lightboxIndex].alt}
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                allowFullScreen
+                className="absolute inset-0 w-full h-full border-0"
+              />
+            ) : (
+              <Image
+                src={displayedImages[lightboxIndex].src}
+                alt={displayedImages[lightboxIndex].alt}
+                fill
+                className="object-contain"
+                priority
+              />
+            )}
           </div>
 
           {/* Caption */}

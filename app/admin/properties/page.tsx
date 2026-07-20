@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
+import Image from "next/image";
 import { formatCurrency } from "../../lib/utils";
 
 interface Estate {
@@ -15,6 +16,9 @@ interface Plot {
   size: string;
   price: number;
   status: string;
+  image?: string;
+  images?: string[];
+  videoUrls?: string[];
 }
 
 const emptyForm = {
@@ -23,7 +27,10 @@ const emptyForm = {
   size: "600sqm",
   price: "",
   status: "Available",
+  videoUrls: "",
 };
+
+const DEFAULT_IMAGE = "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=800&q=80";
 
 export default function ManagePropertiesPage() {
   const [plotsList, setPlotsList] = useState<Plot[]>([]);
@@ -37,6 +44,14 @@ export default function ManagePropertiesPage() {
   const [selectedEstate, setSelectedEstate] = useState("All");
   const [formData, setFormData] = useState(emptyForm);
   const [error, setError] = useState<string | null>(null);
+
+  const [mainImage, setMainImage] = useState<string>("");
+  const [galleryImages, setGalleryImages] = useState<string[]>([]);
+  const [uploadingMain, setUploadingMain] = useState(false);
+  const [uploadingGallery, setUploadingGallery] = useState(false);
+
+  const mainImageInputRef = useRef<HTMLInputElement>(null);
+  const galleryImagesInputRef = useRef<HTMLInputElement>(null);
 
   const fetchData = useCallback(async () => {
     try {
@@ -71,7 +86,10 @@ export default function ManagePropertiesPage() {
       size: plot.size,
       price: String(plot.price),
       status: plot.status,
+      videoUrls: plot.videoUrls?.join("\n") || "",
     });
+    setMainImage(plot.image || "");
+    setGalleryImages(plot.images || []);
     setShowAddForm(true);
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
@@ -79,15 +97,62 @@ export default function ManagePropertiesPage() {
   const closeForm = () => {
     setShowAddForm(false);
     setEditingPlot(null);
-    setFormData({ ...emptyForm, estate: estatesList[0]?.name || "" });
+    setFormData({ ...emptyForm, estate: estatesList[0]?.name || "", videoUrls: "" });
+    setMainImage("");
+    setGalleryImages([]);
     setError(null);
   };
 
   const handleInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
   ) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleMainImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploadingMain(true);
+    try {
+      const fd = new FormData();
+      fd.append("file", file);
+      const res = await fetch("/api/admin/upload", { method: "POST", body: fd });
+      if (!res.ok) throw new Error("Main image upload failed");
+      const data = await res.json();
+      setMainImage(data.url);
+    } catch (err: any) {
+      alert(err.message || "Failed to upload main image");
+    } finally {
+      setUploadingMain(false);
+    }
+  };
+
+  const handleGalleryImagesChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+    setUploadingGallery(true);
+    try {
+      const urls: string[] = [];
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        const fd = new FormData();
+        fd.append("file", file);
+        const res = await fetch("/api/admin/upload", { method: "POST", body: fd });
+        if (!res.ok) throw new Error(`Upload failed for file ${i + 1}`);
+        const data = await res.json();
+        urls.push(data.url);
+      }
+      setGalleryImages((prev) => [...prev, ...urls]);
+    } catch (err: any) {
+      alert(err.message || "Failed to upload gallery images");
+    } finally {
+      setUploadingGallery(false);
+    }
+  };
+
+  const removeGalleryImage = (indexToRemove: number) => {
+    setGalleryImages((prev) => prev.filter((_, idx) => idx !== indexToRemove));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -102,6 +167,9 @@ export default function ManagePropertiesPage() {
       size: formData.size,
       price: parseFloat(formData.price) || 1500000,
       status: formData.status,
+      image: mainImage || "",
+      images: galleryImages.length > 0 ? galleryImages : (mainImage ? [mainImage] : []),
+      videoUrls: formData.videoUrls.split("\n").map((v) => v.trim()).filter(Boolean),
     };
 
     try {
@@ -259,6 +327,132 @@ export default function ManagePropertiesPage() {
                 <option value="Sold">Sold</option>
               </select>
             </div>
+          </div>
+
+          {/* Image & Video Upload Fields */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 border-t border-border-light pt-4">
+            {/* Main Thumbnail Input */}
+            <div>
+              <label className="block text-[10px] font-bold uppercase tracking-wider text-text-light mb-2">
+                Main Thumbnail Image
+              </label>
+              <div className="flex items-center gap-4">
+                <div
+                  className="w-20 h-14 rounded-lg bg-gray-100 border-2 border-dashed border-border flex items-center justify-center overflow-hidden cursor-pointer hover:border-primary transition-colors relative"
+                  onClick={() => mainImageInputRef.current?.click()}
+                >
+                  {mainImage ? (
+                    <Image
+                      src={mainImage}
+                      alt="Thumbnail Preview"
+                      fill
+                      className="object-cover"
+                    />
+                  ) : (
+                    <svg className="w-5 h-5 text-text-light" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M6.827 6.175A2.31 2.31 0 015.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 00-1.134-.175 2.31 2.31 0 01-1.64-1.055l-.822-1.316a2.192 2.192 0 00-1.736-1.039 48.774 48.774 0 00-5.232 0 2.192 2.192 0 00-1.736 1.039l-.821 1.316z" />
+                    </svg>
+                  )}
+                </div>
+                <input
+                  ref={mainImageInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={handleMainImageChange}
+                  className="hidden"
+                />
+                <div>
+                  <button
+                    type="button"
+                    onClick={() => mainImageInputRef.current?.click()}
+                    className="text-primary text-xs font-bold hover:underline cursor-pointer"
+                  >
+                    {uploadingMain ? "Uploading..." : mainImage ? "Change Image" : "Upload Image"}
+                  </button>
+                  <p className="text-[10px] text-text-light mt-0.5">Primary thumbnail representation.</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Multiple Gallery Images Input */}
+            <div>
+              <label className="block text-[10px] font-bold uppercase tracking-wider text-text-light mb-2">
+                Gallery Images (Carousel)
+              </label>
+              <div className="flex items-center gap-4">
+                <div
+                  className="w-20 h-14 rounded-lg bg-gray-100 border-2 border-dashed border-border flex items-center justify-center overflow-hidden cursor-pointer hover:border-primary transition-colors"
+                  onClick={() => galleryImagesInputRef.current?.click()}
+                >
+                  <svg className="w-5 h-5 text-text-light" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                  </svg>
+                </div>
+                <input
+                  ref={galleryImagesInputRef}
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  onChange={handleGalleryImagesChange}
+                  className="hidden"
+                />
+                <div>
+                  <button
+                    type="button"
+                    onClick={() => galleryImagesInputRef.current?.click()}
+                    className="text-primary text-xs font-bold hover:underline cursor-pointer"
+                  >
+                    {uploadingGallery ? "Uploading..." : "Upload Gallery Images"}
+                  </button>
+                  <p className="text-[10px] text-text-light mt-0.5">Select photo files.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Gallery Previews Grid */}
+          {galleryImages.length > 0 && (
+            <div className="space-y-1.5 pt-2">
+              <span className="block text-[10px] font-bold uppercase tracking-wider text-text-light">
+                Gallery Uploads ({galleryImages.length})
+              </span>
+              <div className="flex flex-wrap gap-3 p-3 bg-surface rounded-xl border border-border/50 max-h-48 overflow-y-auto">
+                {galleryImages.map((imgUrl, index) => (
+                  <div key={index} className="relative w-16 h-12 rounded-lg overflow-hidden border border-border bg-white group shadow-sm flex-shrink-0">
+                    <Image
+                      src={imgUrl}
+                      alt={`Gallery preview ${index + 1}`}
+                      fill
+                      className="object-cover"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => removeGalleryImage(index)}
+                      className="absolute inset-0 bg-red-600/80 text-white opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center font-bold text-xs cursor-pointer"
+                      title="Remove image"
+                    >
+                      Delete
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          <div>
+            <label htmlFor="plot-videos" className="block text-[10px] font-bold uppercase tracking-wider text-text-light mb-1">
+              YouTube Video URLs (one per line)
+            </label>
+            <textarea
+              id="plot-videos"
+              name="videoUrls"
+              rows={3}
+              value={formData.videoUrls}
+              onChange={handleInputChange}
+              placeholder="e.g. https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+              className="w-full px-3 py-2 rounded-xl border border-border text-xs focus:border-primary outline-none resize-none"
+            />
+            <p className="text-[10px] text-text-light mt-1">Paste YouTube links highlighting this specific property/plot walkthrough.</p>
           </div>
 
           <div className="flex gap-3">

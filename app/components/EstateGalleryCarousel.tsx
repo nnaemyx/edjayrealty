@@ -2,25 +2,48 @@
 
 import { useState } from "react";
 import Image from "next/image";
+import { getYouTubeThumbnail } from "../lib/utils";
+import VideoModal from "./VideoModal";
 
 interface EstateGalleryCarouselProps {
   images: string[];
+  videoUrls?: string[];
   name: string;
 }
 
-export default function EstateGalleryCarousel({ images, name }: EstateGalleryCarouselProps) {
-  const [activeIndex, setActiveIndex] = useState(0);
+interface SlideItem {
+  type: "image" | "video";
+  url: string;
+}
 
-  if (!images || images.length === 0) {
+export default function EstateGalleryCarousel({ images, videoUrls, name }: EstateGalleryCarouselProps) {
+  const [activeIndex, setActiveIndex] = useState(0);
+  const [modalVideoUrl, setModalVideoUrl] = useState<string>("");
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const slides: SlideItem[] = [];
+
+  // Show videos first, followed by images
+  if (videoUrls && videoUrls.length > 0) {
+    videoUrls.forEach((url) => {
+      slides.push({ type: "video", url });
+    });
+  }
+
+  images.forEach((url) => {
+    slides.push({ type: "image", url });
+  });
+
+  if (slides.length === 0) {
     return null;
   }
 
   const nextSlide = () => {
-    setActiveIndex((prev) => (prev === images.length - 1 ? 0 : prev + 1));
+    setActiveIndex((prev) => (prev === slides.length - 1 ? 0 : prev + 1));
   };
 
   const prevSlide = () => {
-    setActiveIndex((prev) => (prev === 0 ? images.length - 1 : prev - 1));
+    setActiveIndex((prev) => (prev === 0 ? slides.length - 1 : prev - 1));
   };
 
   return (
@@ -31,17 +54,49 @@ export default function EstateGalleryCarousel({ images, name }: EstateGalleryCar
 
       {/* Main Slide Carousel Container */}
       <div className="relative aspect-[16/9] w-full rounded-2xl overflow-hidden border border-border/40 bg-surface shadow-inner group">
-        <Image
-          src={images[activeIndex]}
-          alt={`${name} gallery view ${activeIndex + 1}`}
-          fill
-          priority
-          sizes="(max-width: 1024px) 100vw, 70vw"
-          className="object-cover transition-all duration-500 ease-in-out scale-100"
-        />
+        {slides[activeIndex].type === "video" ? (
+          <div className="relative w-full h-full">
+            <Image
+              src={getYouTubeThumbnail(slides[activeIndex].url)}
+              alt={`${name} video thumbnail`}
+              fill
+              priority
+              sizes="(max-width: 1024px) 100vw, 70vw"
+              className="object-cover"
+            />
+            {/* Play Button Overlay */}
+            <button
+              type="button"
+              onClick={() => {
+                setModalVideoUrl(slides[activeIndex].url);
+                setIsModalOpen(true);
+              }}
+              className="absolute inset-0 flex items-center justify-center bg-black/20 hover:bg-black/35 transition-colors cursor-pointer"
+            >
+              <div className="w-18 h-18 rounded-full bg-red-600 hover:bg-red-700 text-white flex items-center justify-center shadow-lg transform transition-transform duration-300 hover:scale-110 active:scale-95">
+                <svg className="w-8 h-8 fill-current ml-0.5" viewBox="0 0 24 24">
+                  <path d="M8 5v14l11-7z" />
+                </svg>
+              </div>
+            </button>
+            {/* Overlay Badge */}
+            <span className="absolute bottom-4 left-4 z-10 px-3 py-1 bg-red-600 text-white rounded text-xs font-bold uppercase tracking-wider shadow-md">
+              Video Walkthrough
+            </span>
+          </div>
+        ) : (
+          <Image
+            src={slides[activeIndex].url}
+            alt={`${name} gallery view ${activeIndex + 1}`}
+            fill
+            priority
+            sizes="(max-width: 1024px) 100vw, 70vw"
+            className="object-cover transition-all duration-500 ease-in-out scale-100"
+          />
+        )}
 
-        {/* Arrow Navigation (only if > 1 images) */}
-        {images.length > 1 && (
+        {/* Arrow Navigation (only if > 1 slides) */}
+        {slides.length > 1 && (
           <>
             <button
               onClick={prevSlide}
@@ -66,15 +121,16 @@ export default function EstateGalleryCarousel({ images, name }: EstateGalleryCar
 
         {/* Index indicator overlay */}
         <div className="absolute bottom-4 right-4 px-3 py-1 bg-dark/75 text-white rounded-md text-[10px] font-bold tracking-widest uppercase">
-          {activeIndex + 1} / {images.length}
+          {activeIndex + 1} / {slides.length}
         </div>
       </div>
 
-      {/* Thumbnail Nav Bar (only if > 1 images) */}
-      {images.length > 1 && (
+      {/* Thumbnail Nav Bar (only if > 1 slides) */}
+      {slides.length > 1 && (
         <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-thin">
-          {images.map((imgUrl, index) => {
+          {slides.map((slide, index) => {
             const isActive = index === activeIndex;
+            const thumbSrc = slide.type === "video" ? getYouTubeThumbnail(slide.url) : slide.url;
             return (
               <button
                 key={index}
@@ -84,17 +140,32 @@ export default function EstateGalleryCarousel({ images, name }: EstateGalleryCar
                 }`}
               >
                 <Image
-                  src={imgUrl}
+                  src={thumbSrc}
                   alt={`${name} thumbnail ${index + 1}`}
                   fill
                   sizes="80px"
                   className="object-cover"
                 />
+                {slide.type === "video" && (
+                  <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+                    <svg className="w-6 h-6 text-white fill-current" viewBox="0 0 24 24">
+                      <path d="M8 5v14l11-7z" />
+                    </svg>
+                  </div>
+                )}
               </button>
             );
           })}
         </div>
       )}
+
+      {/* Fullscreen Video Modal */}
+      <VideoModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        videoUrl={modalVideoUrl}
+      />
     </div>
   );
 }
+

@@ -22,6 +22,9 @@ export interface Plot {
   size: string;
   price: number;
   status: string;
+  image?: string;
+  images?: string[];
+  videoUrls?: string[];
 }
 
 export interface BuyInquiryDetails {

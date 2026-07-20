@@ -9,7 +9,7 @@ interface EstateCardProps {
 }
 
 export default function EstateCard({ estate }: EstateCardProps) {
-  const { id, name, location, state, shortDescription, priceRange, image, images, plotSizes, status } = estate;
+  const { id, name, location, state, shortDescription, priceRange, image, images, plotSizes, status, videoUrls } = estate;
   const cardImages = images?.length ? images : image ? [image] : [];
 
   // Badge styles based on status
@@ -49,7 +49,7 @@ export default function EstateCard({ estate }: EstateCardProps) {
     <div className="group bg-white rounded-2xl overflow-hidden border border-border/60 hover:border-primary/20 hover:shadow-xl hover:shadow-primary/5 transition-all duration-300 flex flex-col h-full">
       {/* Image Carousel */}
       <div className="relative">
-        <EstateCardCarousel images={cardImages} alt={name} />
+        <EstateCardCarousel images={cardImages} videoUrls={videoUrls} alt={name} />
         {/* Status Badge */}
         <span className={`absolute top-4 left-4 z-10 px-3.5 py-1.5 rounded-full text-xs font-semibold uppercase tracking-wider shadow-md ${badge.classes}`}>
           {badge.text}

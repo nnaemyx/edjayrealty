@@ -175,7 +175,7 @@ export default async function EstateDetailPage({ params }: EstatePageProps) {
               </div>
 
               {/* Gallery / Images Carousel */}
-              <EstateGalleryCarousel images={estate.images} name={estate.name} />
+              <EstateGalleryCarousel images={estate.images} videoUrls={estate.videoUrls} name={estate.name} />
 
               {/* FAQs Accordion */}
               <div className="bg-white rounded-2xl p-6 sm:p-8 border border-border/50 shadow-sm">

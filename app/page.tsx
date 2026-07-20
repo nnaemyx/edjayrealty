@@ -1,7 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { getEstates, getStats, getWhyChooseUs, getTestimonials, getGalleryImages, getCeoProfile } from "./lib/db";
-import EstateCard from "./components/EstateCard";
+import FeaturedEstatesCarousel from "./components/FeaturedEstatesCarousel";
 import StatsCounter from "./components/StatsCounter";
 import TestimonialCarousel from "./components/TestimonialCarousel";
 import GalleryGrid from "./components/GalleryGrid";
@@ -149,11 +149,7 @@ export default async function Home() {
               No premium estates listed yet. Check back soon.
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 w-full">
-              {featuredEstates.map((estate) => (
-                <EstateCard key={estate.id} estate={estate} />
-              ))}
-            </div>
+            <FeaturedEstatesCarousel estates={featuredEstates} />
           )}
         </div>
       </section>
