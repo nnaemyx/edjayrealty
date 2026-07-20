@@ -119,7 +119,7 @@ export default async function AdminInvoiceDetailPage({ params }: InvoicePageProp
               <div className="pt-2 leading-relaxed text-text-muted">
                 <p className="font-bold text-emerald-950 uppercase text-[9px] tracking-wider">HEAD OFFICE:</p>
                 <p>Awka, Anambra State, Nigeria.</p>
-                <p className="mt-0.5">📞 +234 801 234 5678</p>
+                <p className="mt-0.5">📞 +234 806 563 8548</p>
                 <p>✉ info@edjayrealty.com</p>
               </div>
             </div>

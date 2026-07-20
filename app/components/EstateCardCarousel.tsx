@@ -2,8 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Image from "next/image";
-import { getYouTubeThumbnail } from "../lib/utils";
-import VideoModal from "./VideoModal";
+import { getYouTubeThumbnail, getYouTubeEmbedUrl } from "../lib/utils";
 
 interface EstateCardCarouselProps {
   images: string[];
@@ -18,8 +17,7 @@ interface SlideItem {
 
 export default function EstateCardCarousel({ images, videoUrls, alt }: EstateCardCarouselProps) {
   const [activeIndex, setActiveIndex] = useState(0);
-  const [modalVideoUrl, setModalVideoUrl] = useState<string>("");
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isPlaying, setIsPlaying] = useState(false);
 
   const slides: SlideItem[] = [];
 
@@ -35,52 +33,73 @@ export default function EstateCardCarousel({ images, videoUrls, alt }: EstateCar
   });
 
   useEffect(() => {
-    if (slides.length <= 1 || isModalOpen) return;
+    if (slides.length <= 1 || isPlaying) return;
     const timer = setInterval(() => {
       setActiveIndex((prev) => (prev === slides.length - 1 ? 0 : prev + 1));
     }, 4500);
     return () => clearInterval(timer);
-  }, [slides.length, isModalOpen]);
+  }, [slides.length, isPlaying]);
 
   if (slides.length === 0) return null;
 
-  const goTo = (index: number) => setActiveIndex(index);
-  const prev = () => setActiveIndex((i) => (i === 0 ? slides.length - 1 : i - 1));
-  const next = () => setActiveIndex((i) => (i === slides.length - 1 ? 0 : i + 1));
+  const goTo = (index: number) => {
+    setIsPlaying(false);
+    setActiveIndex(index);
+  };
+  const prev = () => {
+    setIsPlaying(false);
+    setActiveIndex((i) => (i === 0 ? slides.length - 1 : i - 1));
+  };
+  const next = () => {
+    setIsPlaying(false);
+    setActiveIndex((i) => (i === slides.length - 1 ? 0 : i + 1));
+  };
 
   return (
     <div className="relative aspect-[4/3] w-full overflow-hidden bg-gray-100 group">
       {/* Slide Content */}
       <div className="w-full h-full relative">
         {slides[activeIndex].type === "video" ? (
-          <div className="relative w-full h-full">
-            <Image
-              src={getYouTubeThumbnail(slides[activeIndex].url)}
-              alt={`${alt} - video thumbnail`}
-              fill
-              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-              className="object-cover"
-            />
-            {/* Play Button Overlay */}
-            <button
-              type="button"
-              onClick={(e) => {
-                e.preventDefault();
-                setModalVideoUrl(slides[activeIndex].url);
-                setIsModalOpen(true);
-              }}
-              className="absolute inset-0 flex items-center justify-center bg-black/25 hover:bg-black/40 transition-all duration-300 cursor-pointer"
-            >
-              <div className="w-14 h-14 rounded-full bg-red-600 hover:bg-red-700 text-white flex items-center justify-center shadow-lg transform transition-transform duration-300 hover:scale-110 active:scale-95">
-                <svg className="w-6 h-6 fill-current ml-0.5" viewBox="0 0 24 24">
-                  <path d="M8 5v14l11-7z" />
-                </svg>
-              </div>
-            </button>
-            {/* Video Badge Overlay */}
-            <span className="absolute bottom-4 left-4 z-10 px-2 py-0.5 bg-red-600 text-white rounded text-[9px] font-bold uppercase tracking-wider">
-              Video Walkthrough
-            </span>
+          <div className="relative w-full h-full animate-fade-in">
+            {isPlaying ? (
+              <iframe
+                src={`${getYouTubeEmbedUrl(slides[activeIndex].url)}?autoplay=1`}
+                title={`${alt} - video walkthrough`}
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                allowFullScreen
+                className="absolute inset-0 w-full h-full border-0"
+              />
+            ) : (
+              <>
+                <Image
+                  src={getYouTubeThumbnail(slides[activeIndex].url)}
+                  alt={`${alt} - video thumbnail`}
+                  fill
+                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                  className="object-cover"
+                />
+                {/* Play Button Overlay */}
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setIsPlaying(true);
+                  }}
+                  className="absolute inset-0 flex items-center justify-center bg-black/25 hover:bg-black/40 transition-all duration-300 cursor-pointer"
+                >
+                  <div className="w-14 h-14 rounded-full bg-red-600 hover:bg-red-700 text-white flex items-center justify-center shadow-lg transform transition-transform duration-300 hover:scale-110 active:scale-95">
+                    <svg className="w-6 h-6 fill-current ml-0.5" viewBox="0 0 24 24">
+                      <path d="M8 5v14l11-7z" />
+                    </svg>
+                  </div>
+                </button>
+                {/* Video Badge Overlay */}
+                <span className="absolute bottom-4 left-4 z-10 px-2 py-0.5 bg-red-600 text-white rounded text-[9px] font-bold uppercase tracking-wider">
+                  Video Walkthrough
+                </span>
+              </>
+            )}
           </div>
         ) : (
           <Image
@@ -141,12 +160,6 @@ export default function EstateCardCarousel({ images, videoUrls, alt }: EstateCar
         </>
       )}
 
-      {/* Fullscreen Video Player Modal */}
-      <VideoModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        videoUrl={modalVideoUrl}
-      />
     </div>
   );
 }
