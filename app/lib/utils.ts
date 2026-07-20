@@ -44,9 +44,16 @@ export function numberToWords(num: number): string {
 
 export function getYouTubeId(url: string): string | null {
   if (!url) return null;
-  const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
-  const match = url.match(regExp);
-  return (match && match[2].length === 11) ? match[2] : null;
+  const trimmed = url.trim();
+  const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=|shorts\/)([^#\&\?]*).*/;
+  const match = trimmed.match(regExp);
+  if (match && match[2].length === 11) {
+    return match[2];
+  }
+  if (trimmed.length === 11 && !trimmed.includes("/") && !trimmed.includes(".")) {
+    return trimmed;
+  }
+  return null;
 }
 
 export function getYouTubeEmbedUrl(url: string): string {

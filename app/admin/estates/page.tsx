@@ -23,6 +23,7 @@ interface Estate {
   paymentPlans: any[];
   faqs: any[];
   videoUrls?: string[];
+  brochureUrl?: string;
 }
 
 const DEFAULT_IMAGE = "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=800&q=80";
@@ -54,11 +55,14 @@ export default function ManageEstatesPage() {
 
   const [mainImage, setMainImage] = useState<string>("");
   const [galleryImages, setGalleryImages] = useState<string[]>([]);
+  const [brochureUrl, setBrochureUrl] = useState<string>("");
   const [uploadingMain, setUploadingMain] = useState(false);
   const [uploadingGallery, setUploadingGallery] = useState(false);
+  const [uploadingBrochure, setUploadingBrochure] = useState(false);
 
   const mainImageInputRef = useRef<HTMLInputElement>(null);
   const galleryImagesInputRef = useRef<HTMLInputElement>(null);
+  const brochureInputRef = useRef<HTMLInputElement>(null);
 
   const fetchEstates = useCallback(async () => {
     try {
@@ -95,6 +99,7 @@ export default function ManageEstatesPage() {
     });
     setMainImage(estate.image || "");
     setGalleryImages(estate.images || []);
+    setBrochureUrl(estate.brochureUrl || "");
     setShowAddForm(true);
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
@@ -105,6 +110,7 @@ export default function ManageEstatesPage() {
     setFormData(emptyForm);
     setMainImage("");
     setGalleryImages([]);
+    setBrochureUrl("");
     setError(null);
   };
 
@@ -157,6 +163,24 @@ export default function ManageEstatesPage() {
     }
   };
 
+  const handleBrochureChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploadingBrochure(true);
+    try {
+      const fd = new FormData();
+      fd.append("file", file);
+      const res = await fetch("/api/admin/upload", { method: "POST", body: fd });
+      if (!res.ok) throw new Error("Brochure upload failed");
+      const data = await res.json();
+      setBrochureUrl(data.url);
+    } catch (err: any) {
+      alert(err.message || "Failed to upload brochure");
+    } finally {
+      setUploadingBrochure(false);
+    }
+  };
+
   const removeGalleryImage = (indexToRemove: number) => {
     setGalleryImages((prev) => prev.filter((_, idx) => idx !== indexToRemove));
   };
@@ -186,6 +210,7 @@ export default function ManageEstatesPage() {
       paymentPlans: editingEstate?.paymentPlans || [],
       faqs: editingEstate?.faqs || [],
       videoUrls: formData.videoUrls.split("\n").map((v) => v.trim()).filter(Boolean),
+      brochureUrl: brochureUrl || undefined,
     };
 
     try {
@@ -439,6 +464,58 @@ export default function ManageEstatesPage() {
                     {uploadingGallery ? "Uploading..." : "Upload Gallery Images"}
                   </button>
                   <p className="text-[10px] text-text-light mt-0.5">Select one or more photo files.</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Brochure PDF Input */}
+            <div className="col-span-1 sm:col-span-2 border-t border-border-light pt-4">
+              <label className="block text-[10px] font-bold uppercase tracking-wider text-text-light mb-2">
+                Land Brochure (PDF)
+              </label>
+              <div className="flex items-center gap-4">
+                <div
+                  className="w-20 h-14 rounded-lg bg-gray-100 border-2 border-dashed border-border flex items-center justify-center overflow-hidden cursor-pointer hover:border-primary transition-colors relative"
+                  onClick={() => brochureInputRef.current?.click()}
+                >
+                  {brochureUrl ? (
+                    <div className="flex flex-col items-center justify-center p-1 text-accent w-full h-full">
+                      <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                      </svg>
+                      <span className="text-[8px] font-bold truncate max-w-full px-1">Brochure</span>
+                    </div>
+                  ) : (
+                    <svg className="w-5 h-5 text-text-light" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 16.5V9.75m0 0l3 3m-3-3l-3 3M6.75 19.5a4.5 4.5 0 01-1.41-8.775 5.25 5.25 0 0110.233-2.33 3 3 0 013.758 3.848A3.752 3.752 0 0118 19.5H6.75z" />
+                    </svg>
+                  )}
+                </div>
+                <input
+                  ref={brochureInputRef}
+                  type="file"
+                  accept="application/pdf"
+                  onChange={handleBrochureChange}
+                  className="hidden"
+                />
+                <div>
+                  <button
+                    type="button"
+                    onClick={() => brochureInputRef.current?.click()}
+                    className="text-primary text-xs font-bold hover:underline cursor-pointer"
+                  >
+                    {uploadingBrochure ? "Uploading..." : brochureUrl ? "Change PDF Brochure" : "Upload PDF Brochure"}
+                  </button>
+                  {brochureUrl && (
+                    <button
+                      type="button"
+                      onClick={() => setBrochureUrl("")}
+                      className="text-accent text-xs font-bold hover:underline cursor-pointer ml-3"
+                    >
+                      Remove
+                    </button>
+                  )}
+                  <p className="text-[10px] text-text-light mt-0.5">Primary PDF document for property guidelines/brochure.</p>
                 </div>
               </div>
             </div>

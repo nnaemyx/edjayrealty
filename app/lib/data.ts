@@ -18,6 +18,7 @@ export interface Estate {
   paymentPlans: PaymentPlan[];
   faqs: FAQ[];
   videoUrls?: string[];
+  brochureUrl?: string;
 }
 
 export interface PaymentPlan {

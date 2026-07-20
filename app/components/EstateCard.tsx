@@ -9,7 +9,7 @@ interface EstateCardProps {
 }
 
 export default function EstateCard({ estate }: EstateCardProps) {
-  const { id, name, location, state, shortDescription, priceRange, image, images, plotSizes, status, videoUrls } = estate;
+  const { id, name, location, state, shortDescription, priceRange, image, images, plotSizes, status, videoUrls, brochureUrl } = estate;
   const cardImages = images?.length ? images : image ? [image] : [];
 
   // Badge styles based on status
@@ -102,27 +102,42 @@ export default function EstateCard({ estate }: EstateCardProps) {
         </div>
 
         {/* Call to Actions */}
-        <div className="grid grid-cols-2 gap-3 mt-auto">
-          <Link
-            href={`/estates/${id}`}
-            className="flex items-center justify-center border border-primary hover:bg-primary/5 text-primary py-2.5 rounded-lg text-sm font-semibold transition-all"
-          >
-            View Details
-          </Link>
-          {status === "sold-out" ? (
-            <button
-              disabled
-              className="flex items-center justify-center bg-gray-100 text-gray-400 cursor-not-allowed py-2.5 rounded-lg text-sm font-semibold"
-            >
-              Sold Out
-            </button>
-          ) : (
+        <div className="flex flex-col gap-2 mt-auto">
+          <div className="grid grid-cols-2 gap-2">
             <Link
-              href={`/buy?estate=${id}`}
-              className="flex items-center justify-center gap-1.5 bg-primary hover:bg-primary-dark text-white py-2.5 rounded-lg text-sm font-semibold transition-all hover:shadow-lg hover:shadow-primary/10"
+              href={`/estates/${id}`}
+              className="flex items-center justify-center border border-primary hover:bg-primary/5 text-primary py-2.5 rounded-lg text-xs sm:text-sm font-semibold transition-all text-center"
             >
-              Buy Now
+              View Details
             </Link>
+            {status === "sold-out" ? (
+              <button
+                disabled
+                className="flex items-center justify-center bg-gray-100 text-gray-400 cursor-not-allowed py-2.5 rounded-lg text-xs sm:text-sm font-semibold text-center"
+              >
+                Sold Out
+              </button>
+            ) : (
+              <Link
+                href={`/buy?estate=${id}`}
+                className="flex items-center justify-center gap-1.5 bg-primary hover:bg-primary-dark text-white py-2.5 rounded-lg text-xs sm:text-sm font-semibold transition-all hover:shadow-lg hover:shadow-primary/10 text-center"
+              >
+                Buy Now
+              </Link>
+            )}
+          </div>
+          {brochureUrl && (
+            <a
+              href={brochureUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center justify-center gap-1.5 border border-border hover:bg-surface text-dark py-2.5 rounded-lg text-xs sm:text-sm font-semibold transition-all text-center w-full"
+            >
+              <svg className="w-4 h-4 text-accent flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+              </svg>
+              Download Brochure (PDF)
+            </a>
           )}
         </div>
       </div>
